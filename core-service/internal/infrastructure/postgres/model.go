@@ -6,9 +6,9 @@ import (
 )
 
 type userModel struct {
-	id        int64
-	name      string
-	isActive  bool      `db:"is_active"`
+	Id        int64
+	Name      string    `db:"name"`
+	IsActive  bool      `db:"is_active"`
 	createdAt time.Time `db:"created_at"`
 	updatedAt time.Time `db:"updated_at"`
 	deletedAt time.Time `db:"deleted_at"`
@@ -16,14 +16,12 @@ type userModel struct {
 
 func userToModel(u *user.User) *userModel {
 	return &userModel{
-		id:        u.Get().ID,
-		name:      u.Get().Name,
-		isActive:  u.Get().IsActive,
-		createdAt: time.Now(),
-		updatedAt: time.Now(),
+		Id:       u.Get().ID,
+		Name:     u.Get().Name,
+		IsActive: u.Get().IsActive,
 	}
 }
 
 func (m *userModel) toUser() *user.User {
-	return user.New(m.id, m.name)
+	return user.New(m.Id, m.Name)
 }

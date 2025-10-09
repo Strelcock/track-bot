@@ -1,5 +1,5 @@
-github.com/Strelcock/pb v0.0.0-20251006050239-cd6dbe24e7af h1:rUThmJz7mLZz1tNflQkB3HqGS7ZyYoocj/m9QBEWiYA=
-github.com/Strelcock/pb v0.0.0-20251006050239-cd6dbe24e7af/go.mod h1:mhnIhYlD079mg6vM+M+hwn0/qxWC/Ta/BDSmjUa4kv4=
+github.com/Strelcock/pb v0.0.0-20251006052830-b3ae2809f659 h1:M9V/Z5e31N8tXGnfx/pP4Evhegwe4MxwSjBLBwlfoFw=
+github.com/Strelcock/pb v0.0.0-20251006052830-b3ae2809f659/go.mod h1:OF1MPId3WXdoQppeh5bfYCLEKT1OaaF6KHlvaGF2U8I=
 github.com/go-logr/logr v1.4.3 h1:CjnDlHq8ikf6E492q6eKboGOC0T8CDaOvkHCIg8idEI=
 github.com/go-logr/logr v1.4.3/go.mod h1:9T104GzyrTigFIr8wt5mBrctHMim0Nb2HLGrmQ40KvY=
 github.com/go-logr/stdr v1.2.2 h1:hSWxHoqTgW2S2qGc0LTAI563KZ5YKYRhT3MFKZMbjag=

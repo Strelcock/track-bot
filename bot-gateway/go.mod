@@ -3,7 +3,7 @@ module bot-gateway
 go 1.25.1
 
 require (
-	github.com/Strelcock/pb v0.0.0-20251006050239-cd6dbe24e7af
+	github.com/Strelcock/pb v0.0.0-20251006052830-b3ae2809f659
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	google.golang.org/grpc v1.75.1
 )

@@ -7,9 +7,9 @@ type User struct {
 }
 
 type UserSnap struct {
-	ID       int64
-	Name     string
-	IsActive bool
+	ID       int64`db:"id"`
+	Name     string `db:"name"`
+	IsActive bool `db:"is_active"`
 }
 
 func New(id int64, name string) *User {

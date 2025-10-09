@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"core-service/internal/domain/user"
+	"core-service/internal/usecase/service"
 
 	"log"
 	"net"
@@ -12,23 +14,34 @@ import (
 
 type server struct {
 	pb.UnimplementedUserServiceServer
+	Service *service.UserService
+}
+
+func New(service *service.UserService) *server {
+	return &server{
+		Service: service,
+	}
 }
 
 func (s *server) CreateUser(ctx context.Context, in *pb.UserRequest) (*pb.UserResponse, error) {
-
+	user := user.New(in.Id, in.Name)
+	err := s.Service.Create(user)
+	if err != nil {
+		return nil, err
+	}
 	return &pb.UserResponse{Resp: "ВЫ УССПЕШНО зарегались"}, nil
 }
 
-func New(port string) error {
+func (s *server) Listen(port string) error {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		return err
 	}
 
-	s := grpc.NewServer()
-	pb.RegisterUserServiceServer(s, &server{})
+	grpcServer := grpc.NewServer()
+	pb.RegisterUserServiceServer(grpcServer, s)
 	log.Printf("Server is listening on %s", lis.Addr())
-	if err = s.Serve(lis); err != nil {
+	if err = grpcServer.Serve(lis); err != nil {
 		return err
 	}
 	return nil

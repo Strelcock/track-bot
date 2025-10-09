@@ -11,12 +11,13 @@ type Config struct {
 }
 
 func Load() *Config {
-	err := godotenv.Load(".env")
+	err := godotenv.Load("../.env")
 	if err != nil {
 		panic(err)
 	}
 
 	return &Config{
+
 		DSN: os.Getenv("DSN"),
 	}
 }

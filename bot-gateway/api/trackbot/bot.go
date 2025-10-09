@@ -44,7 +44,7 @@ func (b *TrackBot) Start() error {
 	updates := b.GetUpdatesChan(u)
 
 	for update := range updates {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 
 		//some checks
@@ -82,7 +82,7 @@ func (b *TrackBot) Start() error {
 			msg.Text = helpMsg
 
 		default:
-			msg.Text = "Unknown kommand, use /help to list all possible commands"
+			msg.Text = "Unknown command, use /help to list all possible commands"
 		}
 
 		for i := range 3 {
