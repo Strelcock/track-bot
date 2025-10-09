@@ -4,6 +4,8 @@ go 1.25.1
 
 require (
 	github.com/Strelcock/pb v0.0.0-20251006052830-b3ae2809f659
+	github.com/jmoiron/sqlx v1.4.0
+	github.com/joho/godotenv v1.5.1
 	google.golang.org/grpc v1.75.1
 )
 
