@@ -33,7 +33,7 @@ func (db *Database) Create(u *user.User) error {
 func (db *Database) FindByID(id int64) (*user.User, error) {
 	model := &userModel{}
 
-	err := db.DB.Get(model, "SELECT id, name, is_active FROM users WHERE id = $1", id)
+	err := db.DB.Get(model, "SELECT id, name, is_active, is_admin FROM users WHERE id = $1", id)
 	if err != nil {
 		return nil, err
 	}
@@ -42,11 +42,16 @@ func (db *Database) FindByID(id int64) (*user.User, error) {
 }
 
 func (db *Database) Activate(id int64) error {
-	_, err := db.DB.Exec("UPDATE TABLE users SET is_active=TRUE WHERE id = $1", id)
+	_, err := db.DB.Exec("UPDATE users SET is_active=TRUE WHERE id = $1", id)
 	return err
 }
 
 func (db *Database) Deactivate(id int64) error {
-	_, err := db.DB.Exec("UPDATE TABLE users SET is_active=FALSE WHERE id = $1", id)
+	_, err := db.DB.Exec("UPDATE users SET is_active=FALSE WHERE id = $1", id)
+	return err
+}
+
+func (db *Database) Admin(id int64) error {
+	_, err := db.DB.Exec("UPDATE users SET is_admin=TRUE WHERE id = $1", id)
 	return err
 }

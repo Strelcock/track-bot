@@ -9,6 +9,7 @@ type userModel struct {
 	Id        int64
 	Name      string    `db:"name"`
 	IsActive  bool      `db:"is_active"`
+	IsAdmin   bool      `db:"is_admin"`
 	createdAt time.Time `db:"created_at"`
 	updatedAt time.Time `db:"updated_at"`
 	deletedAt time.Time `db:"deleted_at"`
@@ -23,5 +24,5 @@ func userToModel(u *user.User) *userModel {
 }
 
 func (m *userModel) toUser() *user.User {
-	return user.New(m.Id, m.Name)
+	return user.New(m.Id, m.Name, m.IsAdmin)
 }

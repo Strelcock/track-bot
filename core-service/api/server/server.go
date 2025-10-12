@@ -24,12 +24,20 @@ func New(service *service.UserService) *server {
 }
 
 func (s *server) CreateUser(ctx context.Context, in *pb.UserRequest) (*pb.UserResponse, error) {
-	user := user.New(in.Id, in.Name)
+	user := user.New(in.Id, in.Name, false)
 	err := s.Service.Create(user)
 	if err != nil {
 		return nil, err
 	}
 	return &pb.UserResponse{Resp: "ВЫ УССПЕШНО зарегались"}, nil
+}
+
+func (s *server) IsAdmin(ctx context.Context, in *pb.AdminRequest) (*pb.AdminResponse, error) {
+	admin, err := s.Service.IsAdmin(in.Id)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.AdminResponse{IsAdmin: admin}, nil
 }
 
 func (s *server) Listen(port string) error {

@@ -5,4 +5,5 @@ type UserRepo interface {
 	FindByID(id int64) (*User, error)
 	Activate(id int64) error
 	Deactivate(id int64) error
+	Admin(id int64) error
 }

@@ -28,8 +28,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = bot.Start()
-	if err != nil {
-		log.Fatal(err)
-	}
+	bot.Start()
+
 }
