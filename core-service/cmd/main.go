@@ -4,7 +4,7 @@ import (
 	"core-service/api/server"
 	"core-service/config"
 	"core-service/internal/infrastructure/postgres"
-	"core-service/internal/usecase/service"
+	"core-service/internal/usecase/uservice"
 	"log"
 )
 
@@ -12,9 +12,9 @@ func main() {
 	cfg := config.Load()
 	db := postgres.New(cfg.DSN)
 
-	service := service.New(db)
+	uService := uservice.New(db.UserDb)
 
-	s := server.New(service)
+	s := server.New(uService)
 
 	err := s.Listen(":50051")
 	if err != nil {

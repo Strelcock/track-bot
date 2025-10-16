@@ -2,7 +2,9 @@ package trackbot
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/Strelcock/pb/bot/pb"
@@ -10,9 +12,14 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+type tracksKey string
+
+const numbers tracksKey = "numbers"
+
 type TrackBot struct {
 	*tgbotapi.BotAPI
-	Client pb.UserServiceClient
+	UserClient  pb.UserServiceClient
+	TrackClient pb.TrackServiceClient
 }
 
 const (
@@ -30,8 +37,8 @@ var adminKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 )
 
 // New bot
-func New(token string, client pb.UserServiceClient) (*TrackBot, error) {
-	bot, err := tgbotapi.NewBotAPI("8286937197:AAFrfcaG_g_s1Sw5YZKUVgbtxyWbC9M8LWc")
+func New(token string, userClient pb.UserServiceClient, trackClient pb.TrackServiceClient) (*TrackBot, error) {
+	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		return nil, errCantCreate(err)
 	}
@@ -40,7 +47,7 @@ func New(token string, client pb.UserServiceClient) (*TrackBot, error) {
 
 	log.Printf("Authorized account %s", bot.Self.UserName)
 
-	return &TrackBot{bot, client}, nil
+	return &TrackBot{bot, userClient, trackClient}, nil
 
 }
 
@@ -55,77 +62,40 @@ func (b *TrackBot) Start() {
 }
 
 func (b *TrackBot) Hadnle(updates tgbotapi.UpdatesChannel) {
+	var tracks = []string{}
 	for update := range updates {
 		func() {
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			valueCtx := context.WithValue(context.Background(), numbers, tracks)
+			ctx, cancel := context.WithTimeout(valueCtx, 2*time.Second)
 			defer cancel()
 
-			//some checks
+			//handle callbacks
 			if update.CallbackQuery != nil {
-				callback := tgbotapi.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)
-				if _, err := b.Request(callback); err != nil {
-					log.Fatal(err)
+				err := b.HandleCallback(update)
+				if err != nil {
+					log.Print(err)
 				}
-				msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Data)
-				if _, err := b.Send(msg); err != nil {
-					log.Fatal(err)
+				return
+			}
+
+			//handle commands
+			if update.Message.IsCommand() {
+				tracks = []string{}
+				err := b.HandleCommands(ctx, update)
+				if err != nil {
+					log.Print(err)
 				}
 				return
 			}
 
 			if !update.Message.IsCommand() {
-				return
+				tracks = strings.Split(update.Message.Text, ",")
+				// msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
+				// b.Send(msg)
 			}
 
 			if update.Message == nil {
 				return
-			}
-
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-			//router
-			switch update.Message.Command() {
-
-			case "start":
-				resp, err := b.Client.CreateUser(ctx, &pb.UserRequest{
-					Id:       update.Message.From.ID,
-					Name:     update.Message.From.UserName,
-					IsActive: true,
-				})
-
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				msg.Text = resp.Resp
-
-			case "add_track":
-
-			case "stop":
-
-			case "help":
-				msg.Text = helpMsg
-
-			case "admin":
-				resp, err := b.Client.IsAdmin(ctx, &pb.AdminRequest{
-					Id: update.Message.From.ID,
-				})
-				if err != nil {
-					log.Fatal(err)
-				}
-				if resp.IsAdmin {
-					msg.ReplyMarkup = adminKeyboard
-					msg.Text = "Admin panel"
-				} else {
-					msg.Text = uknownMsg
-				}
-
-			default:
-				msg.Text = uknownMsg
-			}
-
-			_, err := b.Send(msg)
-			if err != nil {
-				log.Fatal(err)
 			}
 
 			// for i := range 3 {
@@ -137,4 +107,82 @@ func (b *TrackBot) Hadnle(updates tgbotapi.UpdatesChannel) {
 			// 	}
 		}()
 	}
+}
+
+func (b *TrackBot) HandleCommands(ctx context.Context, update tgbotapi.Update) error {
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+	//router
+	switch update.Message.Command() {
+
+	case "start":
+		resp, err := b.UserClient.CreateUser(ctx, &pb.UserRequest{
+			Id:       update.Message.From.ID,
+			Name:     update.Message.From.UserName,
+			IsActive: true,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		msg.Text = resp.Resp
+
+	case "add_track":
+		if len(ctx.Value(numbers).([]string)) == 0 {
+			msg.Text = "Введите номера посылок через запятую (,):"
+			break
+		}
+
+		resp, err := b.TrackClient.AddTrack(ctx, &pb.TrackRequest{
+			Number: ctx.Value(numbers).([]string),
+			User:   update.Message.From.ID,
+		})
+		if err != nil {
+			return err
+		}
+
+		msg.Text = fmt.Sprintf("Добавлены заказы %v", resp.Number)
+
+	case "stop":
+
+	case "help":
+		msg.Text = helpMsg
+
+	case "admin":
+		resp, err := b.UserClient.IsAdmin(ctx, &pb.AdminRequest{
+			Id: update.Message.From.ID,
+		})
+		if err != nil {
+			return err
+		}
+		if resp.IsAdmin {
+			msg.ReplyMarkup = adminKeyboard
+			msg.Text = "Admin panel"
+		} else {
+			msg.Text = uknownMsg
+		}
+
+	default:
+		msg.Text = uknownMsg
+	}
+
+	_, err := b.Send(msg)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (b *TrackBot) HandleCallback(update tgbotapi.Update) error {
+	callback := tgbotapi.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)
+	if _, err := b.Request(callback); err != nil {
+		return err
+	}
+
+	msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Data)
+	if _, err := b.Send(msg); err != nil {
+		return err
+	}
+
+	return nil
 }

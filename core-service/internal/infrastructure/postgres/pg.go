@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"core-service/internal/domain/track"
 	"core-service/internal/domain/user"
 
 	"github.com/jmoiron/sqlx"
@@ -8,8 +9,12 @@ import (
 )
 
 type Database struct {
-	*sqlx.DB
+	*UserDb
+	*TrackDb
 }
+
+type UserDb struct{ *sqlx.DB }
+type TrackDb struct{ *sqlx.DB }
 
 const driver = "postgres"
 
@@ -19,10 +24,11 @@ func New(dsn string) *Database {
 		panic(err)
 	}
 
-	return &Database{db}
+	return &Database{&UserDb{db}, &TrackDb{db}}
 }
 
-func (db *Database) Create(u *user.User) error {
+// USERS#########################################
+func (db *UserDb) Create(u *user.User) error {
 
 	model := userToModel(u)
 	_, err := db.DB.NamedQuery("INSERT INTO users (id, name, is_active) VALUES (:id, :name, :is_active)", model)
@@ -30,7 +36,7 @@ func (db *Database) Create(u *user.User) error {
 	return err
 }
 
-func (db *Database) FindByID(id int64) (*user.User, error) {
+func (db *UserDb) FindByID(id int64) (*user.User, error) {
 	model := &userModel{}
 
 	err := db.DB.Get(model, "SELECT id, name, is_active, is_admin FROM users WHERE id = $1", id)
@@ -41,17 +47,37 @@ func (db *Database) FindByID(id int64) (*user.User, error) {
 	return model.toUser(), nil
 }
 
-func (db *Database) Activate(id int64) error {
+func (db *UserDb) Activate(id int64) error {
 	_, err := db.DB.Exec("UPDATE users SET is_active=TRUE WHERE id = $1", id)
 	return err
 }
 
-func (db *Database) Deactivate(id int64) error {
+func (db *UserDb) Deactivate(id int64) error {
 	_, err := db.DB.Exec("UPDATE users SET is_active=FALSE WHERE id = $1", id)
 	return err
 }
 
-func (db *Database) Admin(id int64) error {
+func (db *UserDb) Admin(id int64) error {
 	_, err := db.DB.Exec("UPDATE users SET is_admin=TRUE WHERE id = $1", id)
 	return err
+}
+
+//TRACKS#########################################
+
+func (db *TrackDb) Create(track *track.Track) error {
+	model := trackToModel(track)
+	_, err := db.DB.Exec("INSERT INTO tracks (number, user_id) VALUES (:numbers, :user_id)", model)
+
+	return err
+}
+
+func (db *TrackDb) FindByNumber(number string) (*track.Track, error) {
+	model := &trackModel{}
+
+	err := db.DB.Get(model, "SELECT number, user_id FROM tracks WHERE number = $1", number)
+	if err != nil {
+		return nil, err
+	}
+
+	return model.toTrack(), nil
 }

@@ -1,4 +1,4 @@
-package service
+package uservice
 
 import (
 	"core-service/config"
