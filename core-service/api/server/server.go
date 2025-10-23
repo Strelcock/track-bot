@@ -2,9 +2,10 @@ package server
 
 import (
 	"context"
+	"core-service/internal/domain/track"
 	"core-service/internal/domain/user"
+	"core-service/internal/usecase/tservice"
 	"core-service/internal/usecase/uservice"
-	"strings"
 
 	"log"
 	"net"
@@ -20,6 +21,7 @@ type server struct {
 
 type trackServer struct {
 	pb.UnimplementedTrackServiceServer
+	TrackService *tservice.TrackService
 }
 
 type userServer struct {
@@ -27,12 +29,14 @@ type userServer struct {
 	UserService *uservice.UserService
 }
 
-func New(uService *uservice.UserService) *server {
+func New(uService *uservice.UserService, tService *tservice.TrackService) *server {
 	return &server{
 		&userServer{
 			UserService: uService,
 		},
-		&trackServer{},
+		&trackServer{
+			TrackService: tService,
+		},
 	}
 }
 
@@ -54,9 +58,20 @@ func (s *server) IsAdmin(ctx context.Context, in *pb.AdminRequest) (*pb.AdminRes
 }
 
 func (s *server) AddTrack(ctx context.Context, in *pb.TrackRequest) (*pb.TrackResponse, error) {
-	resp := strings.Join(in.Number, "; ")
+	var tracks = []track.Track{}
+	for _, n := range in.Number {
+		tr := track.New(n, in.User)
+		tracks = append(tracks, *tr)
+	}
+
+	err := s.TrackService.Create(tracks)
+	if err != nil {
+		return &pb.TrackResponse{
+			Status: "Что-то пошло не так",
+		}, err
+	}
+
 	return &pb.TrackResponse{
-		Number: resp,
 		Status: "Ok",
 	}, nil
 }

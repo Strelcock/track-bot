@@ -6,7 +6,7 @@ import (
 
 type trackModel struct {
 	Id     int64  `db:"id"`
-	Number string `db:"name"`
+	Number string `db:"number"`
 	User   int64  `db:"user_id"`
 	// createdAt time.Time `db:"created_at"`
 	// updatedAt time.Time `db:"updated_at"`

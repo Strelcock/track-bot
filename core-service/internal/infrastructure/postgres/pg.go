@@ -66,7 +66,7 @@ func (db *UserDb) Admin(id int64) error {
 
 func (db *TrackDb) Create(track *track.Track) error {
 	model := trackToModel(track)
-	_, err := db.DB.Exec("INSERT INTO tracks (number, user_id) VALUES (:numbers, :user_id)", model)
+	_, err := db.DB.NamedQuery("INSERT INTO tracks (number, user_id) VALUES (:number, :user_id)", model)
 
 	return err
 }

@@ -2,7 +2,6 @@ package trackbot
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -18,8 +17,9 @@ const numbers tracksKey = "numbers"
 
 type TrackBot struct {
 	*tgbotapi.BotAPI
-	UserClient  pb.UserServiceClient
-	TrackClient pb.TrackServiceClient
+	UserClient   pb.UserServiceClient
+	TrackClient  pb.TrackServiceClient
+	waitForInput map[int64]bool
 }
 
 const (
@@ -27,14 +27,10 @@ const (
 		"/add_track - adds track number(s);\n" +
 		"/stop - This stops notifications;\n" +
 		"/help - help list;\n"
-	uknownMsg = "Unknown command, use /help to list all possible commands"
+	unknownMsg = "Unknown command, use /help to list all possible commands"
 )
 
-var adminKeyboard = tgbotapi.NewInlineKeyboardMarkup(
-	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("Место для вашей админки", "Братан, ты че админ?"),
-	),
-)
+var nilMsg = tgbotapi.MessageConfig{}
 
 // New bot
 func New(token string, userClient pb.UserServiceClient, trackClient pb.TrackServiceClient) (*TrackBot, error) {
@@ -46,8 +42,9 @@ func New(token string, userClient pb.UserServiceClient, trackClient pb.TrackServ
 	bot.Debug = true
 
 	log.Printf("Authorized account %s", bot.Self.UserName)
+	input := make(map[int64]bool)
 
-	return &TrackBot{bot, userClient, trackClient}, nil
+	return &TrackBot{bot, userClient, trackClient, input}, nil
 
 }
 
@@ -65,8 +62,8 @@ func (b *TrackBot) Hadnle(updates tgbotapi.UpdatesChannel) {
 	var tracks = []string{}
 	for update := range updates {
 		func() {
-			valueCtx := context.WithValue(context.Background(), numbers, tracks)
-			ctx, cancel := context.WithTimeout(valueCtx, 2*time.Second)
+
+			timerCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
 
 			//handle callbacks
@@ -81,7 +78,7 @@ func (b *TrackBot) Hadnle(updates tgbotapi.UpdatesChannel) {
 			//handle commands
 			if update.Message.IsCommand() {
 				tracks = []string{}
-				err := b.HandleCommands(ctx, update)
+				err := b.HandleCommands(timerCtx, update)
 				if err != nil {
 					log.Print(err)
 				}
@@ -90,6 +87,19 @@ func (b *TrackBot) Hadnle(updates tgbotapi.UpdatesChannel) {
 
 			if !update.Message.IsCommand() {
 				tracks = strings.Split(update.Message.Text, ",")
+				ctx := context.WithValue(timerCtx, numbers, tracks)
+				if b.waitForInput[update.Message.Chat.ID] {
+					msg, err := b.addCommand(ctx, update)
+					if err != nil {
+						log.Print(err)
+						return
+					}
+					_, err = b.Send(msg)
+					if err != nil {
+						log.Print(err)
+					}
+					return
+				}
 				// msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 				// b.Send(msg)
 			}
@@ -110,63 +120,14 @@ func (b *TrackBot) Hadnle(updates tgbotapi.UpdatesChannel) {
 }
 
 func (b *TrackBot) HandleCommands(ctx context.Context, update tgbotapi.Update) error {
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	//router
-	switch update.Message.Command() {
-
-	case "start":
-		resp, err := b.UserClient.CreateUser(ctx, &pb.UserRequest{
-			Id:       update.Message.From.ID,
-			Name:     update.Message.From.UserName,
-			IsActive: true,
-		})
-
-		if err != nil {
-			return err
-		}
-
-		msg.Text = resp.Resp
-
-	case "add_track":
-		if len(ctx.Value(numbers).([]string)) == 0 {
-			msg.Text = "Введите номера посылок через запятую (,):"
-			break
-		}
-
-		resp, err := b.TrackClient.AddTrack(ctx, &pb.TrackRequest{
-			Number: ctx.Value(numbers).([]string),
-			User:   update.Message.From.ID,
-		})
-		if err != nil {
-			return err
-		}
-
-		msg.Text = fmt.Sprintf("Добавлены заказы %v", resp.Number)
-
-	case "stop":
-
-	case "help":
-		msg.Text = helpMsg
-
-	case "admin":
-		resp, err := b.UserClient.IsAdmin(ctx, &pb.AdminRequest{
-			Id: update.Message.From.ID,
-		})
-		if err != nil {
-			return err
-		}
-		if resp.IsAdmin {
-			msg.ReplyMarkup = adminKeyboard
-			msg.Text = "Admin panel"
-		} else {
-			msg.Text = uknownMsg
-		}
-
-	default:
-		msg.Text = uknownMsg
+	msg, err := b.route(ctx, update)
+	if err != nil {
+		return err
 	}
 
-	_, err := b.Send(msg)
+	_, err = b.Send(msg)
+
 	if err != nil {
 		return err
 	}
