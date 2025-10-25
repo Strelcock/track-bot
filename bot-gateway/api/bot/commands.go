@@ -1,4 +1,4 @@
-package trackbot
+package bot
 
 import (
 	"context"
@@ -14,7 +14,7 @@ var adminKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 	),
 )
 
-func (b *TrackBot) startCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.MessageConfig, error) {
+func (b *Bot) startCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.MessageConfig, error) {
 	resp, err := b.UserClient.CreateUser(ctx, &pb.UserRequest{
 		Id:       update.Message.From.ID,
 		Name:     update.Message.From.UserName,
@@ -29,7 +29,7 @@ func (b *TrackBot) startCommand(ctx context.Context, update tgbotapi.Update) (tg
 	return msg, nil
 }
 
-func (b *TrackBot) addCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.MessageConfig, error) {
+func (b *Bot) addCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.MessageConfig, error) {
 	chatID := update.Message.Chat.ID
 	if ctx.Value(numbers) == nil {
 		text := "Введите номера посылок через запятую (,):"
@@ -53,7 +53,7 @@ func (b *TrackBot) addCommand(ctx context.Context, update tgbotapi.Update) (tgbo
 	return msg, nil
 }
 
-func (b *TrackBot) adminCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.MessageConfig, error) {
+func (b *Bot) adminCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.MessageConfig, error) {
 	chatID := update.Message.Chat.ID
 	msg := tgbotapi.NewMessage(chatID, "")
 
@@ -75,7 +75,7 @@ func (b *TrackBot) adminCommand(ctx context.Context, update tgbotapi.Update) (tg
 	return msg, nil
 }
 
-func (b *TrackBot) route(ctx context.Context, update tgbotapi.Update) (tgbotapi.MessageConfig, error) {
+func (b *Bot) route(ctx context.Context, update tgbotapi.Update) (tgbotapi.MessageConfig, error) {
 	chatId := update.Message.Chat.ID
 	switch update.Message.Command() {
 

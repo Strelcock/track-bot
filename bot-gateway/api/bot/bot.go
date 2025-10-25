@@ -1,4 +1,4 @@
-package trackbot
+package bot
 
 import (
 	"context"
@@ -15,7 +15,7 @@ type tracksKey string
 
 const numbers tracksKey = "numbers"
 
-type TrackBot struct {
+type Bot struct {
 	*tgbotapi.BotAPI
 	UserClient   pb.UserServiceClient
 	TrackClient  pb.TrackServiceClient
@@ -33,7 +33,7 @@ const (
 var nilMsg = tgbotapi.MessageConfig{}
 
 // New bot
-func New(token string, userClient pb.UserServiceClient, trackClient pb.TrackServiceClient) (*TrackBot, error) {
+func New(token string, userClient pb.UserServiceClient, trackClient pb.TrackServiceClient) (*Bot, error) {
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		return nil, errCantCreate(err)
@@ -44,12 +44,12 @@ func New(token string, userClient pb.UserServiceClient, trackClient pb.TrackServ
 	log.Printf("Authorized account %s", bot.Self.UserName)
 	input := make(map[int64]bool)
 
-	return &TrackBot{bot, userClient, trackClient, input}, nil
+	return &Bot{bot, userClient, trackClient, input}, nil
 
 }
 
 // starts bot and handles commands
-func (b *TrackBot) Start() {
+func (b *Bot) Start() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
@@ -58,10 +58,10 @@ func (b *TrackBot) Start() {
 
 }
 
-func (b *TrackBot) Hadnle(updates tgbotapi.UpdatesChannel) {
+func (b *Bot) Hadnle(updates tgbotapi.UpdatesChannel) {
 	var tracks = []string{}
 	for update := range updates {
-		func() {
+		go func() {
 
 			timerCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
@@ -119,7 +119,7 @@ func (b *TrackBot) Hadnle(updates tgbotapi.UpdatesChannel) {
 	}
 }
 
-func (b *TrackBot) HandleCommands(ctx context.Context, update tgbotapi.Update) error {
+func (b *Bot) HandleCommands(ctx context.Context, update tgbotapi.Update) error {
 	//router
 	msg, err := b.route(ctx, update)
 	if err != nil {
@@ -134,7 +134,7 @@ func (b *TrackBot) HandleCommands(ctx context.Context, update tgbotapi.Update) e
 	return nil
 }
 
-func (b *TrackBot) HandleCallback(update tgbotapi.Update) error {
+func (b *Bot) HandleCallback(update tgbotapi.Update) error {
 	callback := tgbotapi.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)
 	if _, err := b.Request(callback); err != nil {
 		return err

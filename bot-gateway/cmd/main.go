@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bot-gateway/api/trackbot"
+	"bot-gateway/api/bot"
 	"log"
 
 	"github.com/Strelcock/pb/bot/pb"
@@ -24,7 +24,7 @@ func main() {
 	tc := pb.NewTrackServiceClient(conn)
 
 	//new bot
-	bot, err := trackbot.New("8286937197:AAFrfcaG_g_s1Sw5YZKUVgbtxyWbC9M8LWc", uc, tc)
+	bot, err := bot.New("8286937197:AAFrfcaG_g_s1Sw5YZKUVgbtxyWbC9M8LWc", uc, tc)
 	if err != nil {
 		log.Fatal(err)
 	}

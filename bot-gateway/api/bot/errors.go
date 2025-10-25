@@ -1,4 +1,4 @@
-package trackbot
+package bot
 
 import (
 	"fmt"
