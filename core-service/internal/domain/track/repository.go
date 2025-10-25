@@ -10,3 +10,7 @@ type TrackRepo interface {
 type TrackConsumer interface {
 	Read(ctx context.Context) ([]byte, error)
 }
+
+type TrackProducer interface {
+	Write(ctx context.Context, msg []byte) error
+}
