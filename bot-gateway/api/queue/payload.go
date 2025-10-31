@@ -1,4 +1,4 @@
-package kservice
+package queue
 
 import "time"
 
@@ -10,5 +10,5 @@ type Status struct {
 
 type StatusTo struct {
 	Status *Status
-	To     int64
+	To     int64 `json:"to"`
 }

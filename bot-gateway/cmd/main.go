@@ -2,6 +2,9 @@ package main
 
 import (
 	"bot-gateway/api/bot"
+	"bot-gateway/api/queue"
+	"bot-gateway/internal/infrastructure/kafka"
+	"bot-gateway/internal/usecase/kafkaservice"
 	"log"
 
 	"github.com/Strelcock/pb/bot/pb"
@@ -11,7 +14,13 @@ import (
 
 const address = "localhost:50051"
 
+const (
+	userMessageTopic = "user.status.push"
+	broker           = "localhost:9092"
+)
+
 func main() {
+
 	//new grpc client
 	conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
@@ -28,6 +37,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	cons := kafka.New([]string{broker}, userMessageTopic, "B1")
+	kafkaService := kafkaservice.New(cons)
+	q := queue.New(kafkaService)
+
+	go q.Read(bot)
 
 	bot.Start()
 

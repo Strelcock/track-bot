@@ -32,7 +32,7 @@ func (c *ConsumerService) Read(ctx context.Context) (*StatusTo, error) {
 	}
 
 	return &StatusTo{
-			Status: *res,
+			Status: res,
 			To:     track.Get().User},
 		nil
 }

@@ -74,7 +74,7 @@ func (db *TrackDb) Create(track *track.Track) error {
 func (db *TrackDb) FindByNumber(number string) (*track.Track, error) {
 	model := &trackModel{}
 
-	err := db.DB.Get(model, "SELECT number, user_id FROM tracks WHERE number = $1", number)
+	err := db.DB.Get(model, "SELECT number, user_id FROM tracks WHERE TRIM(number) = $1", number)
 	if err != nil {
 		return nil, err
 	}
