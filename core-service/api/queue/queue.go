@@ -33,6 +33,7 @@ func (q *Queue) ServeMessages() {
 				log.Println(err)
 			}
 			log.Println(to.Status.ID)
+
 			if to.Status.ID == "0" {
 				return //ДЕБАГ
 			}
