@@ -18,5 +18,5 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.DEPLOY_KEY }}
+          password: ${{ secrets.VPS_PASSWORD }}
           script: cd ~/bot && docker compose down && docker compose up -d --build
