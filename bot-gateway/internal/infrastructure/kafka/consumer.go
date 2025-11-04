@@ -13,14 +13,19 @@ type Consumer struct {
 }
 
 func New(brokers []string, topic, groupID string) *Consumer {
-	time.Sleep(20 * time.Second)
-	conn, err := kafka.DialLeader(context.Background(), "tcp", brokers[0], topic, 0)
-	if err != nil {
-		log.Fatal(err)
+
+	for i := range 5 {
+		time.Sleep(time.Duration(i) * time.Second)
+		conn, err := kafka.DialLeader(context.Background(), "tcp", brokers[0], topic, 0)
+		if err == nil {
+			controller, _ := conn.Controller()
+			log.Print(controller.Host, controller.Port)
+
+		} else if i == 4 {
+			log.Fatal(err)
+		}
+		defer conn.Close()
 	}
-	defer conn.Close()
-	controller, _ := conn.Controller()
-	log.Print(controller.Host, controller.Port)
 
 	return &Consumer{
 		kafka.NewReader(kafka.ReaderConfig{

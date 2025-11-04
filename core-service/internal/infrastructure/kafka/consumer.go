@@ -13,14 +13,18 @@ type Consumer struct {
 }
 
 func NewCons(brokers []string, topic string, groupID string) *Consumer {
-	time.Sleep(20 * time.Second)
-	conn, err := kafka.DialLeader(context.Background(), "tcp", brokers[0], topic, 0)
-	if err != nil {
-		log.Printf("failed to dial leader: %s\n", err.Error())
+	for i := range 5 {
+		time.Sleep(time.Duration(i) * time.Second)
+		conn, err := kafka.DialLeader(context.Background(), "tcp", brokers[0], topic, 0)
+		if err == nil {
+			controller, _ := conn.Controller()
+			log.Print(controller.Host, controller.Port)
+
+		} else if i == 4 {
+			log.Fatal(err)
+		}
+		defer conn.Close()
 	}
-	contoller, _ := conn.Controller()
-	log.Println(contoller.Host, contoller.Port)
-	defer conn.Close()
 
 	return &Consumer{
 		Reader: kafka.NewReader(kafka.ReaderConfig{
