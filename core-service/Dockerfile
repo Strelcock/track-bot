@@ -6,6 +6,8 @@ WORKDIR /app
 
 COPY . .
 
+RUN go get golang.org/x/text
+
 RUN go build -o ./core ./cmd/main.go
 
 FROM scratch
