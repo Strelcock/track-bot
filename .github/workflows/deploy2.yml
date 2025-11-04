@@ -19,4 +19,8 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
-          script: cd ~/bot && docker compose down && docker compose up -d --build
+          script: | 
+            cd ~/bot
+            echo ${{ secrets.BOT_TOKEN }} > .env.docker
+            echo ${{ secrets.ADMIN_ID }} >> ..env.docker
+            docker compose down && docker compose up -d --build
