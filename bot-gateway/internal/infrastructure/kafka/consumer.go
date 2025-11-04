@@ -13,7 +13,7 @@ type Consumer struct {
 }
 
 func New(brokers []string, topic, groupID string) *Consumer {
-	time.Sleep(10 * time.Second)
+	time.Sleep(20 * time.Second)
 	conn, err := kafka.DialLeader(context.Background(), "tcp", brokers[0], topic, 0)
 	if err != nil {
 		log.Fatal(err)
