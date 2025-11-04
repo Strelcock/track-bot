@@ -21,4 +21,4 @@ jobs:
             touch .env.docker
             echo "TOKEN=${{ secrets.BOT_TOKEN }}" > .env.docker
             echo "ADMIN=${{ secrets.ADMIN_ID }}" >> .env.docker
-            docker compose down && docker compose up build core && docker compose build gateway && docker compose build tracker && docker compose up -d
+            docker compose down && docker compose build core && docker compose build gateway && docker compose build tracker && docker compose up -d
