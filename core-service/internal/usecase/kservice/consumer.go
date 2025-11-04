@@ -26,13 +26,19 @@ func (c *ConsumerService) Read(ctx context.Context) (*StatusTo, error) {
 		return nil, err
 	}
 
-	track, err := c.TrackRepo.FindByNumber(res.ID)
+	tracks, err := c.TrackRepo.FindByNumber(res.ID)
 	if err != nil {
 		return nil, err
 	}
 
+	var to []int64
+
+	for _, t := range tracks {
+		to = append(to, t.Get().User)
+	}
+
 	return &StatusTo{
 			Status: res,
-			To:     track.Get().User},
+			To:     to},
 		nil
 }

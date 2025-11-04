@@ -63,7 +63,7 @@ func (b *Bot) Hadnle(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
 		go func() {
 
-			timerCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			timerCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
 			//handle callbacks

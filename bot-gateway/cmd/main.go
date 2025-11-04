@@ -3,8 +3,10 @@ package main
 import (
 	"bot-gateway/api/bot"
 	"bot-gateway/api/queue"
+	"bot-gateway/config"
 	"bot-gateway/internal/infrastructure/kafka"
 	"bot-gateway/internal/usecase/kafkaservice"
+	"fmt"
 	"log"
 
 	"github.com/Strelcock/pb/bot/pb"
@@ -12,17 +14,16 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const address = "localhost:50051"
-
 const (
 	userMessageTopic = "user.status.push"
-	broker           = "localhost:9092"
 )
 
 func main() {
+	cfg := config.Load()
 
+	fmt.Println(cfg)
 	//new grpc client
-	conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(cfg.Core, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	if err != nil {
 		log.Fatal(err)
@@ -33,11 +34,11 @@ func main() {
 	tc := pb.NewTrackServiceClient(conn)
 
 	//new bot
-	bot, err := bot.New("8286937197:AAFrfcaG_g_s1Sw5YZKUVgbtxyWbC9M8LWc", uc, tc)
+	bot, err := bot.New(cfg.Token, uc, tc)
 	if err != nil {
 		log.Fatal(err)
 	}
-	cons := kafka.New([]string{broker}, userMessageTopic, "B1")
+	cons := kafka.New([]string{cfg.Broker}, userMessageTopic, "B1")
 	kafkaService := kafkaservice.New(cons)
 	q := queue.New(kafkaService)
 

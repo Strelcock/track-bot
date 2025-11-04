@@ -38,10 +38,13 @@ func (q *Queue) Read(b *bot.Bot) {
 
 		statusStr := fmt.Sprintf("Заказ номер %s %s\nДата: %v", status.Status.ID, status.Status.Status, status.Status.UpdatedAt)
 
-		msg := tgbotapi.NewMessage(status.To, statusStr)
-		_, err = b.Send(msg)
-		if err != nil {
-			log.Println(err)
+		for _, to := range status.To {
+			msg := tgbotapi.NewMessage(to, statusStr)
+			_, err = b.Send(msg)
+			if err != nil {
+				log.Println(err)
+			}
 		}
+
 	}
 }

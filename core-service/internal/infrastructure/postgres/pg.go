@@ -3,6 +3,8 @@ package postgres
 import (
 	"core-service/internal/domain/track"
 	"core-service/internal/domain/user"
+	"log"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -19,12 +21,18 @@ type TrackDb struct{ *sqlx.DB }
 const driver = "postgres"
 
 func New(dsn string) *Database {
-	db, err := sqlx.Connect(driver, dsn)
-	if err != nil {
-		panic(err)
+
+	for i := range 3 {
+		time.Sleep(time.Second * time.Duration(i))
+		db, err := sqlx.Connect(driver, dsn)
+		if err == nil {
+			log.Println("Service connected to db successfully")
+			return &Database{&UserDb{db}, &TrackDb{db}}
+		}
+		log.Println("cant connect to db: ", err)
 	}
 
-	return &Database{&UserDb{db}, &TrackDb{db}}
+	return nil
 }
 
 // USERS#########################################
@@ -71,13 +79,16 @@ func (db *TrackDb) Create(track *track.Track) error {
 	return err
 }
 
-func (db *TrackDb) FindByNumber(number string) (*track.Track, error) {
-	model := &trackModel{}
+func (db *TrackDb) FindByNumber(number string) ([]track.Track, error) {
+	model := []trackModel{}
 
-	err := db.DB.Get(model, "SELECT number, user_id FROM tracks WHERE TRIM(number) = $1", number)
+	err := db.DB.Select(&model, "SELECT number, user_id FROM tracks WHERE TRIM(number) = $1", number)
 	if err != nil {
 		return nil, err
 	}
-
-	return model.toTrack(), nil
+	res := []track.Track{}
+	for _, m := range model {
+		res = append(res, *m.toTrack())
+	}
+	return res, nil
 }

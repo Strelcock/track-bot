@@ -17,6 +17,7 @@ func New(cons *kservice.ConsumerService, prod *kservice.ProducerService) *Queue 
 }
 
 func (q *Queue) ServeMessages() {
+	log.Println("serving")
 
 	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	// defer cancel()
@@ -26,13 +27,14 @@ func (q *Queue) ServeMessages() {
 			defer func() { // если приходит сообщение о посылке которой
 				recover() // у пользователя нет
 			}() //притянуто за уши для разработки
+
 			to, err := q.ConsumerService.Read(context.Background())
 			if err != nil {
 				log.Println(err)
 			}
-
+			log.Println(to.Status.ID)
 			if to.Status.ID == "0" {
-				return
+				return //ДЕБАГ
 			}
 
 			bytes, err := json.Marshal(to)

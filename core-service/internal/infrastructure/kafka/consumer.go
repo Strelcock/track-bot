@@ -2,6 +2,8 @@ package kafka
 
 import (
 	"context"
+	"log"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -11,11 +13,21 @@ type Consumer struct {
 }
 
 func NewCons(brokers []string, topic string, groupID string) *Consumer {
+	time.Sleep(5 * time.Second)
+	conn, err := kafka.DialLeader(context.Background(), "tcp", brokers[0], topic, 0)
+	if err != nil {
+		log.Printf("failed to dial leader: %s\n", err.Error())
+	}
+	contoller, _ := conn.Controller()
+	log.Println(contoller.Host, contoller.Port)
+	defer conn.Close()
+
 	return &Consumer{
 		Reader: kafka.NewReader(kafka.ReaderConfig{
-			Brokers: brokers,
-			Topic:   topic,
-			GroupID: groupID,
+			Brokers:     brokers,
+			Topic:       topic,
+			GroupID:     groupID,
+			StartOffset: kafka.FirstOffset,
 		}),
 	}
 }

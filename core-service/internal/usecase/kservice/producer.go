@@ -3,6 +3,7 @@ package kservice
 import (
 	"context"
 	"core-service/internal/domain/track"
+	"log"
 )
 
 type ProducerService struct {
@@ -18,5 +19,6 @@ func (p *ProducerService) SendMessage(ctx context.Context, msg []byte) error {
 	if err != nil {
 		return err
 	}
+	log.Println("Message sent")
 	return nil
 }

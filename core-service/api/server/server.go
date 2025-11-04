@@ -6,6 +6,7 @@ import (
 	"core-service/internal/domain/user"
 	"core-service/internal/usecase/tservice"
 	"core-service/internal/usecase/uservice"
+	"fmt"
 
 	"log"
 	"net"
@@ -17,6 +18,11 @@ import (
 type server struct {
 	*userServer
 	*trackServer
+	pb.TrackerClient
+}
+
+type toTracker struct {
+	pb.TrackServiceClient
 }
 
 type trackServer struct {
@@ -29,7 +35,7 @@ type userServer struct {
 	UserService *uservice.UserService
 }
 
-func New(uService *uservice.UserService, tService *tservice.TrackService) *server {
+func New(uService *uservice.UserService, tService *tservice.TrackService, client pb.TrackerClient) *server {
 	return &server{
 		&userServer{
 			UserService: uService,
@@ -37,6 +43,7 @@ func New(uService *uservice.UserService, tService *tservice.TrackService) *serve
 		&trackServer{
 			TrackService: tService,
 		},
+		client,
 	}
 }
 
@@ -58,19 +65,43 @@ func (s *server) IsAdmin(ctx context.Context, in *pb.AdminRequest) (*pb.AdminRes
 }
 
 func (s *server) AddTrack(ctx context.Context, in *pb.TrackRequest) (*pb.TrackResponse, error) {
+	//create new tracks
+	fmt.Println(in.Number)
 	var tracks = []track.Track{}
 	for _, n := range in.Number {
 		tr := track.New(n, in.User)
 		tracks = append(tracks, *tr)
 	}
 
+	//subscribe to changes
+	errCh := make(chan error, 16)
+
+	go func(errCh chan error) {
+		_, err := s.TrackerClient.ServeTrack(ctx, &pb.ToTracker{
+			Number: in.Number,
+		})
+		if err != nil {
+			errCh <- err
+		}
+		close(errCh)
+	}(errCh)
+
+	//write to db
 	err := s.TrackService.Create(tracks)
 	if err != nil {
 		return &pb.TrackResponse{
-			Status: "Что-то пошло не так",
+			Status: "Что-то пошло не так в ядре",
 		}, err
 	}
 
+	err = <-errCh
+
+	//response
+	if err != nil {
+		return &pb.TrackResponse{
+			Status: "Что-то пошло не так на сервисе отслеживания",
+		}, err
+	}
 	return &pb.TrackResponse{
 		Status: "Ok",
 	}, nil

@@ -4,7 +4,7 @@ import "context"
 
 type TrackRepo interface {
 	Create(track *Track) error
-	FindByNumber(number string) (*Track, error)
+	FindByNumber(number string) ([]Track, error)
 }
 
 type TrackConsumer interface {
