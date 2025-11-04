@@ -21,6 +21,7 @@ func (l *Listener) ListenAndServe(r *chi.Mux) {
 		res := make(map[string]string)
 		json.NewDecoder(r.Body).Decode(&res)
 		fmt.Println(res)
+
 		w.WriteHeader(200)
 		w.Write([]byte("MoyaPosylkaWebhook"))
 	})
