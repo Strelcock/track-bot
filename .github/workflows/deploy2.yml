@@ -9,10 +9,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
- 
- 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
         with:
@@ -21,6 +17,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           script: | 
             cd ~/bot
+            git pull origin master
             touch .env.docker
             echo "TOKEN=${{ secrets.BOT_TOKEN }}" > .env.docker
             echo "ADMIN=${{ secrets.ADMIN_ID }}" >> .env.docker
