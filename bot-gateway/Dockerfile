@@ -11,7 +11,7 @@ WORKDIR /app
 COPY . .
 
 # RUN go get golang.org/x/text
-
+ 
 RUN go build -v -o ./gateway ./cmd/main.go
 
 FROM scratch
