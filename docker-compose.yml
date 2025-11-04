@@ -50,6 +50,8 @@ services:
     container_name: gateway
     ports: 
      - "8080:8080" 
+    depends_on:
+     - kafka
     networks: 
      - gateway-core
      - infrastructure 
@@ -68,6 +70,7 @@ services:
       
       BROKER: kafka:9090
       TRACKER: tracker:50052
+      
     networks:
      - gateway-core
      - tracker-core
