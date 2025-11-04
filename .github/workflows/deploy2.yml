@@ -22,6 +22,6 @@ jobs:
           script: | 
             cd ~/bot
             touch .env.docker
-            echo ${{ secrets.BOT_TOKEN }} > .env.docker
-            echo ${{ secrets.ADMIN_ID }} >> .env.docker
+            echo "TOKEN=${{ secrets.BOT_TOKEN }}" > .env.docker
+            echo "ADMIN=${{ secrets.ADMIN_ID }}" >> .env.docker
             docker compose down && docker compose up -d --build
