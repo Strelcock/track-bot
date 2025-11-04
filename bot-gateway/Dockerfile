@@ -10,9 +10,9 @@ WORKDIR /app
 
 COPY . .
 
-RUN go get golang.org/x/text
+# RUN go get golang.org/x/text
 
-RUN go build -o ./gateway ./cmd/main.go
+RUN go build -v -o ./gateway ./cmd/main.go
 
 FROM scratch
 
