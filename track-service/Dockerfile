@@ -15,4 +15,5 @@ FROM scratch
 COPY --from=build /app/tracker /bin/tracker
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
+
 CMD ["bin/tracker"]
