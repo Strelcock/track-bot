@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"log"
+	"math"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -14,16 +15,16 @@ type Consumer struct {
 
 func NewCons(brokers []string, topic string, groupID string) *Consumer {
 	for i := range 5 {
-		time.Sleep(time.Duration(i) * time.Second)
+		time.Sleep(time.Duration(math.Pow(2, float64(i))) * time.Second)
 		conn, err := kafka.DialLeader(context.Background(), "tcp", brokers[0], topic, 0)
 		if err == nil {
 			controller, _ := conn.Controller()
 			log.Print(controller.Host, controller.Port)
-
+			conn.Close()
+			break
 		} else if i == 4 {
 			log.Fatal(err)
 		}
-		defer conn.Close()
 	}
 
 	return &Consumer{
