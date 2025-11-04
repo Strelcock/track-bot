@@ -31,7 +31,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,BROKER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,PLAINTEXT_CONTAINER:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
       CLUSTER_ID: KQZobG5yS9-1CVs7oqHYFg
     
     volumes: 
@@ -70,7 +70,7 @@ services:
       
       BROKER: kafka:9090
       TRACKER: tracker:50052
-      
+
     networks:
      - gateway-core
      - tracker-core
