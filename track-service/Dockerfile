@@ -6,11 +6,11 @@ WORKDIR /app
 
 COPY go.mod go.sum ./
 
-RUN go mod download
+# RUN go mod download
 
-COPY . .
+# COPY . .
 
-#RUN go get golang.org/x/text
+RUN go get golang.org/x/text
 
 RUN go build -o ./tracker ./cmd/main.go
 
