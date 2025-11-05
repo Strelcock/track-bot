@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 )
 
@@ -24,6 +25,7 @@ func WebhookEvent(next http.Handler) http.Handler {
 
 		rawMap := make(map[string]struct{})
 		err = json.Unmarshal(rawData, &rawMap)
+		log.Println(rawMap)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
