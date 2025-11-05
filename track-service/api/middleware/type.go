@@ -23,7 +23,7 @@ func WebhookEvent(next http.Handler) http.Handler {
 			return
 		}
 		log.Println(rawData)
-		rawMap := make(map[string]struct{})
+		rawMap := make(map[string]map[string]any)
 		err = json.Unmarshal(rawData, &rawMap)
 		log.Println(rawMap)
 		if err != nil {
