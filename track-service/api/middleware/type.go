@@ -14,8 +14,7 @@ const (
 
 func WebhookEvent(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		rawData := []byte{}
-		err := json.NewDecoder(r.Body).Decode(&rawData)
+		rawData, err := io.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
