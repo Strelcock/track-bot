@@ -24,7 +24,7 @@ func (l *Listener) ListenAndServe(r *chi.Mux) {
 			return
 		}
 		if _, ok := res["newEvents"]; ok {
-			var newEvent NewEvent
+			var newEvent Event
 			err = json.NewDecoder(r.Body).Decode(&newEvent)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -32,7 +32,7 @@ func (l *Listener) ListenAndServe(r *chi.Mux) {
 			}
 			log.Println(newEvent)
 		} else if _, ok := res["trackerDelivered"]; ok {
-			var trackDelivered TrackDelivered
+			var trackDelivered Delivered
 			err = json.NewDecoder(r.Body).Decode(&trackDelivered)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
