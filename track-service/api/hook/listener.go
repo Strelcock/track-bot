@@ -2,7 +2,6 @@ package hook
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -18,9 +17,29 @@ func NewListener() *Listener {
 
 func (l *Listener) ListenAndServe(r *chi.Mux) {
 	r.Post("/hook/listen", func(w http.ResponseWriter, r *http.Request) {
-		res := make(map[string]any)
-		json.NewDecoder(r.Body).Decode(&res)
-		fmt.Println(res)
+		res := make(map[string]struct{})
+		err := json.NewDecoder(r.Body).Decode(&res)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if _, ok := res["newEvents"]; ok {
+			var newEvent NewEvent
+			err = json.NewDecoder(r.Body).Decode(&newEvent)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			log.Println(newEvent)
+		} else if _, ok := res["trackerDelivered"]; ok {
+			var trackDelivered TrackDelivered
+			err = json.NewDecoder(r.Body).Decode(&trackDelivered)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			log.Println(trackDelivered)
+		}
 
 		w.WriteHeader(200)
 		w.Write([]byte("MoyaPosylkaWebhook"))
