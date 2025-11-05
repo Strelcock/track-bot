@@ -20,6 +20,7 @@ func (l *Listener) ListenAndServe(r *chi.Mux) {
 		res := make(map[string]struct{})
 		err := json.NewDecoder(r.Body).Decode(&res)
 		if err != nil {
+			log.Println("first-step decoding: ", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -27,6 +28,7 @@ func (l *Listener) ListenAndServe(r *chi.Mux) {
 			var newEvent Event
 			err = json.NewDecoder(r.Body).Decode(&newEvent)
 			if err != nil {
+				log.Println("new event decoding: ", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -35,6 +37,7 @@ func (l *Listener) ListenAndServe(r *chi.Mux) {
 			var trackDelivered Delivered
 			err = json.NewDecoder(r.Body).Decode(&trackDelivered)
 			if err != nil {
+				log.Println("tracker delivered decoding: ", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
