@@ -9,8 +9,8 @@ type Event struct {
 }
 
 type EventData struct {
-	Barcode string   `json:"barcode"`
-	Events  []string `json:"events"`
+	Barcode string   `json:"barcode,omitempty"`
+	Events  []string `json:"events,omitempty"`
 }
 
 type Delivered struct {
