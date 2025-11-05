@@ -18,7 +18,8 @@ jobs:
           script: | 
             cd ~/bot
             git pull origin master
-            touch .env.docker
             echo "TOKEN=${{ secrets.BOT_TOKEN }}" > .env.docker
             echo "ADMIN=${{ secrets.ADMIN_ID }}" >> .env.docker
+            echo "ADMIN=${{ secrets.API_KEY }}" >> .env.docker
+            
             docker compose down && docker compose build core && docker compose build gateway && docker compose build tracker && docker compose up -d

@@ -2,9 +2,9 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
+	"tracker/api/hook"
 
 	"github.com/Strelcock/pb/bot/pb"
 	"google.golang.org/grpc"
@@ -12,6 +12,7 @@ import (
 
 type server struct {
 	pb.UnimplementedTrackerServer
+	*hook.Sender
 }
 
 func New() *server {
@@ -34,6 +35,22 @@ func (s *server) Listen(port string) error {
 }
 
 func (s *server) ServeTrack(ctx context.Context, in *pb.ToTracker) (*pb.Empty, error) {
-	fmt.Println(in.Number)
+	var errs AddError
+	for _, n := range in.Number {
+		carrier, err := s.Carrier(n)
+		if err != nil {
+			errs.Errs = append(errs.Errs, err.Error())
+			continue
+		}
+		err = s.AddTracker(carrier, n)
+		if err != nil {
+			errs.Errs = append(errs.Errs, err.Error())
+		}
+	}
+
+	if errs.Errs != nil {
+		return nil, &errs
+	}
+
 	return nil, nil
 }
