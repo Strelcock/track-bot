@@ -18,7 +18,7 @@ func NewSender(apiKey string) *Sender {
 }
 
 func (s *Sender) Carrier(barcode string) (string, error) {
-	var carrier CarrierResponse
+	var carrier []CarrierResponse
 
 	url := fmt.Sprintf("https://moyaposylka.ru/api/v1/carriers/%s", barcode)
 	resp, err := http.Get(url)
@@ -29,11 +29,11 @@ func (s *Sender) Carrier(barcode string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("carrier: %w", err)
 	}
-	return carrier.Code, nil
+	return carrier[0].Code, nil
 }
 
 func (s *Sender) AddTracker(carrier, barcode string) error {
-	url := fmt.Sprintf("https://moyaposylka.ru/api/v1/%s/%s", carrier, barcode)
+	url := fmt.Sprintf("https://moyaposylka.ru/api/v1/trackers/%s/%s", carrier, barcode)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte{}))
 	if err != nil {

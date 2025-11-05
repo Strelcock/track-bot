@@ -18,7 +18,7 @@ func NewListener() *Listener {
 
 func (l *Listener) ListenAndServe(r *chi.Mux) {
 	r.Post("/hook/listen", func(w http.ResponseWriter, r *http.Request) {
-		res := make(map[string]string)
+		res := make(map[string]any)
 		json.NewDecoder(r.Body).Decode(&res)
 		fmt.Println(res)
 
