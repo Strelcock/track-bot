@@ -25,7 +25,9 @@ func (l *Listener) ListenAndServe(r *chi.Mux) {
 	r.Use(middleware.WebhookEvent)
 	r.Post("/hook/listen", func(w http.ResponseWriter, r *http.Request) {
 		eventType := r.Header.Get("Event-Type")
+
 		switch eventType {
+
 		case newEvents:
 			var newEvent Event
 			err := json.NewDecoder(r.Body).Decode(&newEvent)
@@ -34,6 +36,7 @@ func (l *Listener) ListenAndServe(r *chi.Mux) {
 				return
 			}
 			log.Println(newEvent)
+
 		case trackerDelivered:
 			var trackerDelivered Delivered
 			err := json.NewDecoder(r.Body).Decode(&trackerDelivered)

@@ -12,6 +12,7 @@ const (
 	trackerDelivered = "trackerDelivered"
 )
 
+// check which event has been delivered
 func WebhookEvent(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rawData, err := io.ReadAll(r.Body)
@@ -20,7 +21,8 @@ func WebhookEvent(next http.Handler) http.Handler {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		rawMap := make(map[string]any)
+
+		rawMap := make(map[string]struct{})
 		err = json.Unmarshal(rawData, &rawMap)
 		if err != nil {
 			w.WriteHeader(500)
