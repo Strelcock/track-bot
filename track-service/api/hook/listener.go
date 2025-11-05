@@ -4,8 +4,14 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"tracker/api/middleware"
 
 	"github.com/go-chi/chi/v5"
+)
+
+const (
+	newEvents        = "newEvents"
+	trackerDelivered = "trackerDelivered"
 )
 
 type Listener struct {
@@ -16,32 +22,26 @@ func NewListener() *Listener {
 }
 
 func (l *Listener) ListenAndServe(r *chi.Mux) {
+	r.Use(middleware.WebhookEvent)
 	r.Post("/hook/listen", func(w http.ResponseWriter, r *http.Request) {
-		res := make(map[string]struct{})
-		err := json.NewDecoder(r.Body).Decode(&res)
-		if err != nil {
-			log.Println("first-step decoding: ", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if _, ok := res["newEvents"]; ok {
+		eventType := r.Header.Get("Event-Type")
+		switch eventType {
+		case newEvents:
 			var newEvent Event
-			err = json.NewDecoder(r.Body).Decode(&newEvent)
+			err := json.NewDecoder(r.Body).Decode(&newEvent)
 			if err != nil {
-				log.Println("new event decoding: ", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 			log.Println(newEvent)
-		} else if _, ok := res["trackerDelivered"]; ok {
-			var trackDelivered Delivered
-			err = json.NewDecoder(r.Body).Decode(&trackDelivered)
+		case trackerDelivered:
+			var trackerDelivered Delivered
+			err := json.NewDecoder(r.Body).Decode(&trackerDelivered)
 			if err != nil {
-				log.Println("tracker delivered decoding: ", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			log.Println(trackDelivered)
+			log.Println(trackerDelivered)
 		}
 
 		w.WriteHeader(200)
