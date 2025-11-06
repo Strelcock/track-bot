@@ -1,11 +1,9 @@
 package kservice
 
-import "time"
-
 type Status struct {
-	ID        string    `json:"id"`
-	Status    string    `json:"status"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Event   string   `json:"event"`
+	Barcode string   `json:"barcode"`
+	Status  []string `json:"status"`
 }
 
 type StatusTo struct {

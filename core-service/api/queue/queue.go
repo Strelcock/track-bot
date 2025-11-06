@@ -32,9 +32,9 @@ func (q *Queue) ServeMessages() {
 			if err != nil {
 				log.Println(err)
 			}
-			log.Println(to.Status.ID)
+			log.Println(to.Status.Barcode)
 
-			if to.Status.ID == "0" {
+			if to.Status.Barcode == "0" {
 				return //ДЕБАГ
 			}
 

@@ -26,7 +26,7 @@ func (c *ConsumerService) Read(ctx context.Context) (*StatusTo, error) {
 		return nil, err
 	}
 
-	tracks, err := c.TrackRepo.FindByNumber(res.ID)
+	tracks, err := c.TrackRepo.FindByNumber(res.Barcode)
 	if err != nil {
 		return nil, err
 	}

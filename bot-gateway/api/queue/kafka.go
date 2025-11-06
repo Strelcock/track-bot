@@ -36,7 +36,7 @@ func (q *Queue) Read(b *bot.Bot) {
 			return
 		}
 
-		statusStr := fmt.Sprintf("Заказ номер %s %s\nДата: %v", status.Status.ID, status.Status.Status, status.Status.UpdatedAt)
+		statusStr := fmt.Sprintf("Заказ номер %s %s\n", status.Status.Barcode, status.Status.Status)
 
 		for _, to := range status.To {
 			msg := tgbotapi.NewMessage(to, statusStr)

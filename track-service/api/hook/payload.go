@@ -22,7 +22,7 @@ type DeliverData struct {
 }
 
 type Message struct {
-	Event   string
-	Barcode string
-	Status  []string
+	Event   string   `json:"event"`
+	Barcode string   `json:"barcode"`
+	Status  []string `json:"status"`
 }
