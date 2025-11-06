@@ -90,7 +90,7 @@ func (l *Listener) ListenAndServe(r *chi.Mux) {
 	})
 
 	log.Println("Hook is listening on :8080")
-	err := http.ListenAndServe(":8082", r)
+	err := http.ListenAndServe(":8080", r)
 	if err != nil {
 		log.Println(err)
 	}
