@@ -8,6 +8,7 @@ import (
 )
 
 type Config struct {
+	Broker string
 	ApiKey string
 }
 
@@ -19,5 +20,6 @@ func Load() *Config {
 
 	return &Config{
 		ApiKey: os.Getenv("APIKEY"),
+		Broker: os.Getenv("BROKER"),
 	}
 }

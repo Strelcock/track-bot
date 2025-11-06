@@ -1,10 +1,13 @@
 package hook
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 	"tracker/api/middleware"
+	"tracker/api/queue"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -15,22 +18,42 @@ const (
 )
 
 type Listener struct {
+	q *queue.Queue
 }
 
-func NewListener() *Listener {
-	return &Listener{}
+func NewListener(q *queue.Queue) *Listener {
+	return &Listener{q}
 }
 
 func (l *Listener) ListenAndServe(r *chi.Mux) {
 	r.Use(middleware.WebhookEvent)
 	r.Post("/hook/listen", func(w http.ResponseWriter, r *http.Request) {
 		eventType := r.Header.Get("Event-Type")
-
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
 		switch eventType {
 
 		case newEvents:
 			var newEvent Event
 			err := json.NewDecoder(r.Body).Decode(&newEvent)
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			msg := &Message{
+				Event:   eventType,
+				Barcode: newEvent.NewEvents.Barcode,
+				Status:  newEvent.NewEvents.Events,
+			}
+
+			byteMsg, err := json.Marshal(msg)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			err = l.q.WriteMessages(ctx, byteMsg)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -44,7 +67,22 @@ func (l *Listener) ListenAndServe(r *chi.Mux) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			log.Println(trackerDelivered)
+
+			msg := &Message{
+				Event:   eventType,
+				Barcode: trackerDelivered.TrackerDelivered.Barcode,
+			}
+
+			byteMsg, err := json.Marshal(msg)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			err = l.q.WriteMessages(ctx, byteMsg)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		w.WriteHeader(200)

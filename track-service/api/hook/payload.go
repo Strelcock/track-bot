@@ -20,3 +20,9 @@ type Delivered struct {
 type DeliverData struct {
 	Barcode string `json:"barcode"`
 }
+
+type Message struct {
+	Event   string
+	Barcode string
+	Status  []string
+}
