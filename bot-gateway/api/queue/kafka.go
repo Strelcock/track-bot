@@ -22,7 +22,7 @@ func (q *Queue) Read(b *bot.Bot) {
 	ctx := context.Background()
 	for {
 		bytes, err := q.IQueueService.Read(ctx)
-
+		log.Println(bytes)
 		if err != nil {
 			log.Println(err)
 			return
@@ -30,7 +30,7 @@ func (q *Queue) Read(b *bot.Bot) {
 
 		var status StatusTo
 		err = json.Unmarshal(bytes, &status)
-
+		log.Printf("%#v\n", status)
 		if err != nil {
 			log.Println(err)
 			return
