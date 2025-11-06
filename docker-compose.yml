@@ -86,6 +86,8 @@ services:
       dockerfile: Dockerfile
       context: ./track-service
     container_name: tracker
+    env_file:
+     - .env.docker
     environment:
      BROKER: kafka:9090
     ports: 

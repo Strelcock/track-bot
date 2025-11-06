@@ -6,7 +6,6 @@ import (
 	"bot-gateway/config"
 	"bot-gateway/internal/infrastructure/kafka"
 	"bot-gateway/internal/usecase/kafkaservice"
-	"fmt"
 	"log"
 
 	"github.com/Strelcock/pb/bot/pb"
@@ -21,7 +20,7 @@ const (
 func main() {
 	cfg := config.Load()
 
-	fmt.Println(cfg)
+	//fmt.Println(cfg)
 	//new grpc client
 	conn, err := grpc.NewClient(cfg.Core, grpc.WithTransportCredentials(insecure.NewCredentials()))
 

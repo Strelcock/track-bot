@@ -43,14 +43,16 @@ func (s *Sender) AddTracker(carrier, barcode string) error {
 	if err != nil {
 		return err
 	}
+	//log.Println(req)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Api-Key", s.apiKey)
 
 	client := &http.Client{}
-	log.Println(client)
+	//log.Println(client)
 
 	resp, err := client.Do(req)
 	if err != nil {
+		log.Println("sender: add tracker: ", err)
 		return err
 	}
 

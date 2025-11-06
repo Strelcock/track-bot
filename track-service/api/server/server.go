@@ -15,8 +15,8 @@ type server struct {
 	*hook.Sender
 }
 
-func New() *server {
-	return &server{}
+func New(sender *hook.Sender) *server {
+	return &server{Sender: sender}
 }
 
 func (s *server) Listen(port string) error {

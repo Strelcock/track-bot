@@ -18,11 +18,13 @@ const trackStatusTopic = "track.status.get"
 
 func main() {
 	cfg := config.Load()
+	//log.Println(cfg)
 	prod := kafka.New([]string{cfg.Broker}, trackStatusTopic)
 	srv := queueservice.New(prod)
 	queue := queue.New(srv)
+	sender := hook.NewSender(cfg.ApiKey)
 
-	s := server.New()
+	s := server.New(sender)
 
 	listener := hook.NewListener(queue)
 	r := chi.NewRouter()
