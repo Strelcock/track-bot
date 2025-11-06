@@ -1,9 +1,9 @@
 package queue
 
 type Status struct {
-	Event   string   `json:"event"`
-	Barcode string   `json:"barcode"`
-	Status  []string `json:"status"`
+	Event   string `json:"event"`
+	Barcode string `json:"barcode"`
+	Status  string `json:"status"`
 }
 
 type StatusTo struct {
