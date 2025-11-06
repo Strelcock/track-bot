@@ -23,4 +23,4 @@ jobs:
             echo "APIKEY=${{ secrets.API_KEY }}" >> .env.docker
             
             docker compose down && docker compose build core && docker compose build gateway && docker compose build tracker && docker compose up -d
-            docker system prune -a --volumes
+            docker system prune -af --volumes
