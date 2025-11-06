@@ -29,7 +29,7 @@ func WebhookEvent(next http.Handler) http.Handler {
 
 		rawMap := make(map[string]any)
 		err = json.Unmarshal(rawData, &rawMap)
-		//log.Println(rawMap)
+		log.Println(rawMap)
 		if err != nil {
 			log.Printf("unmarshal into map: %s\n", err.Error())
 			w.WriteHeader(500)
