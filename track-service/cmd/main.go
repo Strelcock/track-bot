@@ -27,7 +27,7 @@ func main() {
 	listener := hook.NewListener(queue)
 	r := chi.NewRouter()
 	go listener.ListenAndServe(r)
-	err := s.Listen(":50052")
+	err := s.Listen(port)
 	if err != nil {
 		log.Fatal(err)
 	}

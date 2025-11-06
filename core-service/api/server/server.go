@@ -18,6 +18,7 @@ import (
 type server struct {
 	*userServer
 	*trackServer
+
 	pb.TrackerClient
 }
 

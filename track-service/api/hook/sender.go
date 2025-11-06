@@ -1,9 +1,9 @@
 package hook
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -25,6 +25,10 @@ func (s *Sender) Carrier(barcode string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("carrier: %w", err)
 	}
+	if resp.StatusCode >= 400 {
+		log.Println(resp.Status, resp.StatusCode)
+		return "", fmt.Errorf("carrier: %d %s", resp.StatusCode, resp.Status)
+	}
 	err = json.NewDecoder(resp.Body).Decode(&carrier)
 	if err != nil {
 		return "", fmt.Errorf("carrier: %w", err)
@@ -35,14 +39,16 @@ func (s *Sender) Carrier(barcode string) (string, error) {
 func (s *Sender) AddTracker(carrier, barcode string) error {
 	url := fmt.Sprintf("https://moyaposylka.ru/api/v1/trackers/%s/%s", carrier, barcode)
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte{}))
+	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Api-Key", s.apiKey)
 
-	client := http.Client{}
+	client := &http.Client{}
+	log.Println(client)
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
