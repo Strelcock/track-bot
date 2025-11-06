@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 )
 
@@ -22,12 +21,12 @@ func WebhookEvent(next http.Handler) http.Handler {
 			w.Write([]byte("read body: " + err.Error()))
 			return
 		}
-		if len(rawData) == 0 {
-			next.ServeHTTP(w, r)
-		}
-		log.Println(rawData)
+		// if len(rawData) == 0 {
+		// 	next.ServeHTTP(w, r)
+		// }
+		//log.Println(rawData)
 
-		rawMap := make(map[string]map[string]any)
+		rawMap := make(map[string]struct{})
 		err = json.Unmarshal(rawData, &rawMap)
 		//log.Println(rawMap)
 		if err != nil {
