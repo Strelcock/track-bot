@@ -3,6 +3,7 @@ package hook
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -34,7 +35,7 @@ func (l *Listener) ListenAndServe(r *chi.Mux) {
 		switch eventType {
 
 		case newEvents:
-			var newEvent Event
+			var newEvent NewEvent
 			err := json.NewDecoder(r.Body).Decode(&newEvent)
 
 			if err != nil {
@@ -42,10 +43,12 @@ func (l *Listener) ListenAndServe(r *chi.Mux) {
 				return
 			}
 
+			status := fmt.Sprintf("%s: %s", newEvent.NewEvents.Events[0].Operation, newEvent.NewEvents.Events[0].Attribute)
+
 			msg := &Message{
 				Event:   eventType,
 				Barcode: newEvent.NewEvents.Barcode,
-				Status:  newEvent.NewEvents.Events,
+				Status:  status,
 			}
 
 			byteMsg, err := json.Marshal(msg)
