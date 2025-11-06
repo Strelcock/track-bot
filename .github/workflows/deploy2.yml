@@ -22,5 +22,7 @@ jobs:
             echo "ADMIN=${{ secrets.ADMIN_ID }}" >> .env.docker
             echo "APIKEY=${{ secrets.API_KEY }}" >> .env.docker
             
-            docker compose down && docker compose build core && docker compose build gateway && docker compose build tracker && docker compose up -d
+            docker compose down && docker compose up -d --build
             docker system prune -af --volumes
+
+#&& docker compose build core && docker compose build gateway && docker compose build tracker && 
