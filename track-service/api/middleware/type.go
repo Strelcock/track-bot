@@ -22,6 +22,9 @@ func WebhookEvent(next http.Handler) http.Handler {
 			w.Write([]byte("read body: " + err.Error()))
 			return
 		}
+		if len(rawData) == 0 {
+			next.ServeHTTP(w, r)
+		}
 		log.Println(rawData)
 
 		rawMap := make(map[string]map[string]any)
