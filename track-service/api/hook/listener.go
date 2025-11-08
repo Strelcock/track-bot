@@ -43,25 +43,27 @@ func (l *Listener) ListenAndServe(r *chi.Mux) {
 				return
 			}
 
-			status := fmt.Sprintf("%s: %s", newEvent.NewEvents.Events[0].Operation, newEvent.NewEvents.Events[0].Attribute)
+			if len(newEvent.NewEvents.Events) != 0 {
+				status := fmt.Sprintf("%s: %s", newEvent.NewEvents.Events[0].Operation, newEvent.NewEvents.Events[0].Attribute)
 
-			msg := &Message{
-				Event:   eventType,
-				Barcode: newEvent.NewEvents.Barcode,
-				Status:  status,
-			}
+				msg := &Message{
+					Event:   eventType,
+					Barcode: newEvent.NewEvents.Barcode,
+					Status:  status,
+				}
 
-			byteMsg, err := json.Marshal(msg)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				byteMsg, err := json.Marshal(msg)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				err = l.q.WriteMessages(ctx, byteMsg)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				log.Println(newEvent)
 			}
-			err = l.q.WriteMessages(ctx, byteMsg)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			log.Println(newEvent)
 
 		case trackerDelivered:
 			var trackerDelivered Delivered
