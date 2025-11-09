@@ -24,9 +24,7 @@ jobs:
             echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env.docker
             echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env.docker
             echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env.docker
-            echo "DSN=${{ secrets.DSN }}" >> .env.docker
-            
-            
+      
             docker compose down && docker compose up -d --build
             docker system prune -af 
 
