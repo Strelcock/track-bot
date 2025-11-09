@@ -9,6 +9,7 @@ import (
 	"core-service/internal/usecase/kservice"
 	"core-service/internal/usecase/tservice"
 	"core-service/internal/usecase/uservice"
+	"fmt"
 	"log"
 
 	"github.com/Strelcock/pb/bot/pb"
@@ -25,7 +26,7 @@ func main() {
 	cfg := config.Load()
 	db := postgres.New(cfg.DSN)
 
-	//fmt.Println(cfg)
+	fmt.Println(cfg)
 
 	consumer := kafka.NewCons([]string{cfg.Broker}, trackStatusTopic, "A1")
 	producer := kafka.NewProd([]string{cfg.Broker}, userMessageTopic)
