@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Strelcock/pb/bot/pb"
@@ -15,11 +16,16 @@ type tracksKey string
 
 const numbers tracksKey = "numbers"
 
+type botMap struct {
+	mu           sync.RWMutex
+	waitForInput map[int64]bool
+}
+
 type Bot struct {
 	*tgbotapi.BotAPI
-	UserClient   pb.UserServiceClient
-	TrackClient  pb.TrackServiceClient
-	waitForInput map[int64]bool
+	UserClient  pb.UserServiceClient
+	TrackClient pb.TrackServiceClient
+	botMap      *botMap
 }
 
 const (
@@ -42,7 +48,8 @@ func New(token string, userClient pb.UserServiceClient, trackClient pb.TrackServ
 	bot.Debug = true
 
 	log.Printf("Authorized account %s", bot.Self.UserName)
-	input := make(map[int64]bool)
+	waitForInput := make(map[int64]bool)
+	input := &botMap{waitForInput: waitForInput}
 
 	return &Bot{bot, userClient, trackClient, input}, nil
 
@@ -88,7 +95,7 @@ func (b *Bot) Hadnle(updates tgbotapi.UpdatesChannel) {
 			if !update.Message.IsCommand() {
 				tracks = strings.Split(update.Message.Text, ",")
 				ctx := context.WithValue(timerCtx, numbers, tracks)
-				if b.waitForInput[update.Message.Chat.ID] {
+				if b.botMap.waitForInput[update.Message.Chat.ID] {
 					msg, err := b.addCommand(ctx, update)
 					if err != nil {
 						log.Print(err)

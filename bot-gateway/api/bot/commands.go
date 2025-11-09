@@ -2,7 +2,6 @@ package bot
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Strelcock/pb/bot/pb"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -34,7 +33,9 @@ func (b *Bot) addCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.
 	if ctx.Value(numbers) == nil {
 		text := "Введите номера посылок через запятую (,):"
 		msg := tgbotapi.NewMessage(chatID, text)
-		b.waitForInput[chatID] = true
+		b.botMap.mu.Lock()
+		defer b.botMap.mu.Unlock()
+		b.botMap.waitForInput[chatID] = true
 		return msg, nil
 	}
 
@@ -47,9 +48,10 @@ func (b *Bot) addCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.
 		return nilMsg, err
 	}
 
-	text := fmt.Sprintf("Добавлены заказы %v", resp.Status)
-	msg := tgbotapi.NewMessage(chatID, text)
-	b.waitForInput[chatID] = false
+	msg := tgbotapi.NewMessage(chatID, resp.Status)
+	b.botMap.mu.Lock()
+	defer b.botMap.mu.Unlock()
+	b.botMap.waitForInput[chatID] = false
 	return msg, nil
 }
 

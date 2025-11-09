@@ -6,8 +6,8 @@ import (
 	"core-service/internal/domain/user"
 	"core-service/internal/usecase/tservice"
 	"core-service/internal/usecase/uservice"
-	"errors"
 	"fmt"
+	"strings"
 
 	"log"
 	"net"
@@ -99,19 +99,20 @@ func (s *server) AddTrack(ctx context.Context, in *pb.TrackRequest) (*pb.TrackRe
 	err = <-errCh
 
 	//response
-	if errors.Is(err, errors.New("TrackerAlreadyExists")) {
-		return &pb.TrackResponse{
-			Status: "Вы Успешно подписались на уже отслеживаемый заказ",
-		}, nil
-	}
 
 	if err != nil {
+		if strings.Contains(err.Error(), "TrackerAlreadyExists") {
+
+			return &pb.TrackResponse{
+				Status: "Вы Успешно подписались на уже отслеживаемый заказ",
+			}, nil
+		}
 		return &pb.TrackResponse{
 			Status: "Что-то пошло не так на сервисе отслеживания",
 		}, err
 	}
 	return &pb.TrackResponse{
-		Status: "Ok",
+		Status: fmt.Sprintf("Добавлены заказы: %s", strings.Join(in.Number, "\n")),
 	}, nil
 }
 

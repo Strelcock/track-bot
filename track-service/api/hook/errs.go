@@ -1,11 +1,11 @@
 package hook
 
-type AddError struct {
+type HookAddError struct {
 	Status  string `json:"status"`
 	Err     string `json:"error"`
 	Message string `json:"message"`
 }
 
-func (e AddError) Error() string {
+func (e HookAddError) Error() string {
 	return e.Message
 }
