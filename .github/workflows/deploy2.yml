@@ -21,6 +21,9 @@ jobs:
             echo "TOKEN=${{ secrets.BOT_TOKEN }}" > .env.docker
             echo "ADMIN=${{ secrets.ADMIN_ID }}" >> .env.docker
             echo "APIKEY=${{ secrets.API_KEY }}" >> .env.docker
+            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env.docker
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env.docker
+            echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env.docker
             
             docker compose down && docker compose up -d --build
             docker system prune -af 
