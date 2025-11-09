@@ -57,7 +57,10 @@ func (s *Sender) AddTracker(carrier, barcode string) error {
 	}
 
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("%d, %s", resp.StatusCode, resp.Status)
+		var err AddError
+		json.NewDecoder(resp.Body).Decode(&err)
+
+		return err
 	}
 
 	return nil
