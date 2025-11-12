@@ -35,21 +35,15 @@ func (s *server) Listen(port string) error {
 }
 
 func (s *server) ServeTrack(ctx context.Context, in *pb.ToTracker) (*pb.Empty, error) {
-	var errs AddError
-	for _, n := range in.Number {
-		carrier, err := s.Carrier(n)
-		if err != nil {
-			errs.Errs = append(errs.Errs, err.Error())
-			continue
-		}
-		err = s.AddTracker(carrier, n)
-		if err != nil {
-			errs.Errs = append(errs.Errs, err.Error())
-		}
+
+	carrier, err := s.Carrier(in.Number)
+	if err != nil {
+		return nil, NewAddError(in.Number, err)
 	}
 
-	if errs.Errs != nil {
-		return nil, &errs
+	err = s.AddTracker(carrier, in.Number)
+	if err != nil {
+		return nil, NewAddError(in.Number, err)
 	}
 
 	return nil, nil

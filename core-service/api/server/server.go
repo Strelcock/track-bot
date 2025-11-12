@@ -69,50 +69,51 @@ func (s *server) IsAdmin(ctx context.Context, in *pb.AdminRequest) (*pb.AdminRes
 func (s *server) AddTrack(ctx context.Context, in *pb.TrackRequest) (*pb.TrackResponse, error) {
 	//create new tracks
 	fmt.Println(in.Number)
-	var tracks = []track.Track{}
-	for _, n := range in.Number {
-		tr := track.New(n, in.User)
-		tracks = append(tracks, *tr)
-	}
+	tr := track.New(in.Number, in.User)
 
 	//subscribe to changes
 	errCh := make(chan error, 16)
 
 	go func(errCh chan error) {
+
 		_, err := s.TrackerClient.ServeTrack(ctx, &pb.ToTracker{
 			Number: in.Number,
 		})
 		if err != nil {
 			errCh <- err
+			log.Println("hi from secong goroutine with error")
 		}
+
 		close(errCh)
 	}(errCh)
 
 	//write to db
-	err := s.TrackService.Create(tracks)
+	err := s.TrackService.Create(tr)
 	if err != nil {
 		return &pb.TrackResponse{
 			Status: "Что-то пошло не так в ядре",
 		}, err
 	}
 
+	//response
 	err = <-errCh
 
-	//response
-
 	if err != nil {
-		if strings.Contains(err.Error(), "TrackerAlreadyExists") {
 
+		if strings.Contains(err.Error(), "TrackerAlreadyExists") { //sub
 			return &pb.TrackResponse{
 				Status: "Вы Успешно подписались на уже отслеживаемый заказ",
 			}, nil
 		}
+
 		return &pb.TrackResponse{
-			Status: "Что-то пошло не так на сервисе отслеживания",
+			Status: fmt.Sprintf("Заказ %s добавить не удалось: %s", in.Number, err.Error()),
 		}, err
+
 	}
+
 	return &pb.TrackResponse{
-		Status: fmt.Sprintf("Добавлены заказы: %s", strings.Join(in.Number, "\n")),
+		Status: fmt.Sprintf("Заказ %s добавлен успешно\n", in.Number),
 	}, nil
 }
 

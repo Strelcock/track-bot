@@ -2,6 +2,7 @@ package hook
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,6 +24,7 @@ func (s *Sender) Carrier(barcode string) (string, error) {
 	url := fmt.Sprintf("https://moyaposylka.ru/api/v1/carriers/%s", barcode)
 	resp, err := http.Get(url)
 	if err != nil {
+		log.Println("try to get: ", err)
 		return "", fmt.Errorf("carrier: %w", err)
 	}
 	if resp.StatusCode >= 400 {
@@ -33,6 +35,10 @@ func (s *Sender) Carrier(barcode string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("carrier: %w", err)
 	}
+	if len(carrier) == 0 {
+		return "", errors.New("carrier: not found")
+	}
+
 	return carrier[0].Code, nil
 }
 

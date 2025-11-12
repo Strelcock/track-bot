@@ -2,6 +2,8 @@ package bot
 
 import (
 	"context"
+	"log"
+	"strings"
 
 	"github.com/Strelcock/pb/bot/pb"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -39,19 +41,27 @@ func (b *Bot) addCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.
 		return msg, nil
 	}
 
-	resp, err := b.TrackClient.AddTrack(ctx, &pb.TrackRequest{
-		Number: ctx.Value(numbers).([]string),
-		User:   update.Message.From.ID,
-	})
+	msg := tgbotapi.NewMessage(chatID, "")
+	for _, num := range ctx.Value(numbers).([]string) {
+		resp, err := b.TrackClient.AddTrack(ctx, &pb.TrackRequest{
+			Number: num,
+			User:   update.Message.From.ID,
+		})
 
-	if err != nil {
-		return nilMsg, err
+		if err != nil {
+			log.Println(err, resp)
+			errMsg := strings.Split(err.Error(), "=")
+			msg.Text += errMsg[2]
+			continue
+		}
+
+		msg.Text += resp.Status
+
 	}
 
-	msg := tgbotapi.NewMessage(chatID, resp.Status)
 	b.botMap.mu.Lock()
-	defer b.botMap.mu.Unlock()
 	b.botMap.waitForInput[chatID] = false
+	b.botMap.mu.Unlock()
 	return msg, nil
 }
 

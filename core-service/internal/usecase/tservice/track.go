@@ -2,8 +2,7 @@ package tservice
 
 import (
 	"core-service/internal/domain/track"
-	"errors"
-	"strings"
+	"fmt"
 )
 
 type TrackService struct {
@@ -14,20 +13,11 @@ func New(repo track.TrackRepo) *TrackService {
 	return &TrackService{repo: repo}
 }
 
-func (t *TrackService) Create(tracks []track.Track) error {
-
-	var errs = []string{}
-	for _, tr := range tracks {
-		err := t.repo.Create(&tr)
-		if err != nil {
-			errs = append(errs, err.Error())
-		}
+func (t *TrackService) Create(track *track.Track) error {
+	err := t.repo.Create(track)
+	if err != nil {
+		return fmt.Errorf("trackService: %w", err)
 	}
 
-	if len(errs) != 0 {
-		errStr := strings.Join(errs, ";")
-		err := errors.New(errStr)
-		return err
-	}
 	return nil
 }

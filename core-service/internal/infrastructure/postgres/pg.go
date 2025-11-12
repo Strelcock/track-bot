@@ -22,7 +22,7 @@ const driver = "postgres"
 
 func New(dsn string) *Database {
 
-	for i := range 3 {
+	for i := range 5 {
 		time.Sleep(time.Second * time.Duration(i))
 		db, err := sqlx.Connect(driver, dsn)
 		if err == nil {

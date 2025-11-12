@@ -1,8 +1,6 @@
 package server
 
-import (
-	"fmt"
-)
+import "fmt"
 
 type AddError struct {
 	Number string
@@ -11,8 +9,4 @@ type AddError struct {
 
 func (a AddError) Error() string {
 	return fmt.Sprintf("%s: %s", a.Number, a.Err.Error())
-}
-
-func NewAddError(number string, err error) AddError {
-	return AddError{number, err}
 }

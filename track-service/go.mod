@@ -3,7 +3,7 @@ module tracker
 go 1.25.1
 
 require (
-	github.com/Strelcock/pb v0.0.0-20251101152001-e412018377a1
+	github.com/Strelcock/pb v0.0.0-20251112140504-5e094ad463a5
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/joho/godotenv v1.5.1
 	github.com/segmentio/kafka-go v0.4.49
