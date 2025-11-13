@@ -22,6 +22,7 @@ func WebhookEvent(next http.Handler) http.Handler {
 			w.Write([]byte("read body: " + err.Error()))
 			return
 		}
+		log.Println(string(rawData))
 		// if len(rawData) == 0 {
 		// 	next.ServeHTTP(w, r)
 		// }
