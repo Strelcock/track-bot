@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"log"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -16,6 +17,23 @@ type tracksKey string
 
 const numbers tracksKey = "numbers"
 
+const (
+	add  = "Добавить посылку"
+	stop = "Остановить рассылку"
+	info = "Где моя посылка?"
+	help = "Помощь"
+)
+
+const (
+	startCmd = "start"
+	admin    = "admin"
+	addCmd   = "add_track"
+	stopCmd  = "stop"
+	helpCmd  = "help"
+)
+
+var commandList = []string{add, stop, info, help}
+
 type botMap struct {
 	mu           sync.RWMutex
 	waitForInput map[int64]bool
@@ -26,17 +44,8 @@ type Bot struct {
 	UserClient  pb.UserServiceClient
 	TrackClient pb.TrackServiceClient
 	botMap      *botMap
+	commands    tgbotapi.ReplyKeyboardMarkup
 }
-
-const (
-	helpMsg = "/start - starts the bot;\n" +
-		"/add_track - adds track number(s);\n" +
-		"/stop - This stops notifications;\n" +
-		"/help - help list;\n"
-	unknownMsg = "Unknown command, use /help to list all possible commands"
-)
-
-var nilMsg = tgbotapi.MessageConfig{}
 
 // New bot
 func New(token string, userClient pb.UserServiceClient, trackClient pb.TrackServiceClient) (*Bot, error) {
@@ -49,9 +58,19 @@ func New(token string, userClient pb.UserServiceClient, trackClient pb.TrackServ
 
 	log.Printf("Authorized account %s", bot.Self.UserName)
 	waitForInput := make(map[int64]bool)
+	commandKeyboard := tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton(add),
+			tgbotapi.NewKeyboardButton(stop),
+			tgbotapi.NewKeyboardButton(info),
+		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton(help),
+		),
+	)
 	input := &botMap{waitForInput: waitForInput}
 
-	return &Bot{bot, userClient, trackClient, input}, nil
+	return &Bot{bot, userClient, trackClient, input, commandKeyboard}, nil
 
 }
 
@@ -66,9 +85,13 @@ func (b *Bot) Start() {
 }
 
 func (b *Bot) Hadnle(updates tgbotapi.UpdatesChannel) {
-	var tracks = []string{}
 	for update := range updates {
 		go func() {
+			var tracks = []string{}
+
+			if update.Message == nil {
+				return
+			}
 
 			timerCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -83,16 +106,24 @@ func (b *Bot) Hadnle(updates tgbotapi.UpdatesChannel) {
 			}
 
 			//handle commands
+
 			if update.Message.IsCommand() {
-				tracks = []string{}
-				err := b.HandleCommands(timerCtx, update)
+				err := b.HandleSlashCommands(timerCtx, update)
 				if err != nil {
 					log.Print(err)
 				}
 				return
 			}
 
-			if !update.Message.IsCommand() {
+			if slices.Contains(commandList, strings.TrimSpace(update.Message.Text)) {
+
+				err := b.HandleNonSlashCommands(timerCtx, update)
+				if err != nil {
+					log.Print(err)
+				}
+				return
+			} else {
+
 				tracks = strings.Split(update.Message.Text, ",")
 				ctx := context.WithValue(timerCtx, numbers, tracks)
 				if b.botMap.waitForInput[update.Message.Chat.ID] {
@@ -107,28 +138,30 @@ func (b *Bot) Hadnle(updates tgbotapi.UpdatesChannel) {
 					}
 					return
 				}
-				// msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-				// b.Send(msg)
 			}
 
-			if update.Message == nil {
-				return
-			}
-
-			// for i := range 3 {
-			// 	time.Sleep(time.Second * time.Duration(math.Pow(2, float64(i))))
-			// 	if _, err := b.Send(msg); err != nil {
-			// 		log.Printf("Cannot send message: %s", err.Error())
-			// 	} else {
-			// 		break
-			// 	}
 		}()
 	}
 }
 
-func (b *Bot) HandleCommands(ctx context.Context, update tgbotapi.Update) error {
+func (b *Bot) HandleSlashCommands(ctx context.Context, update tgbotapi.Update) error {
 	//router
-	msg, err := b.route(ctx, update)
+	msg, err := b.routeSlashCommands(ctx, update)
+	if err != nil {
+		return err
+	}
+
+	_, err = b.Send(msg)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (b *Bot) HandleNonSlashCommands(ctx context.Context, update tgbotapi.Update) error {
+	//router
+	msg, err := b.routeNonSlashCommands(ctx, update)
 	if err != nil {
 		return err
 	}

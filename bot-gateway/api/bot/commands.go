@@ -9,6 +9,16 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+const (
+	helpMsg = "/start - starts the bot;\n" +
+		"/add_track - adds track number(s);\n" +
+		"/stop - This stops notifications;\n" +
+		"/help - help list;\n"
+	unknownMsg = "Unknown command, use /help to list all possible commands"
+)
+
+var nilMsg = tgbotapi.MessageConfig{}
+
 var adminKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 	tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("Место для вашей админки", "Братан, ты че админ?"),
@@ -27,17 +37,22 @@ func (b *Bot) startCommand(ctx context.Context, update tgbotapi.Update) (tgbotap
 	}
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, resp.Resp)
+	log.Println("STARTUEM ", update.Message.Text)
+	msg.ReplyMarkup = b.commands
+	log.Println("ESLI NE OPEN TO HOOEVO")
 	return msg, nil
 }
 
 func (b *Bot) addCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.MessageConfig, error) {
 	chatID := update.Message.Chat.ID
+
 	if ctx.Value(numbers) == nil {
 		text := "Введите номера посылок через запятую (,):"
 		msg := tgbotapi.NewMessage(chatID, text)
 		b.botMap.mu.Lock()
 		defer b.botMap.mu.Unlock()
 		b.botMap.waitForInput[chatID] = true
+
 		return msg, nil
 	}
 
@@ -62,6 +77,7 @@ func (b *Bot) addCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.
 	b.botMap.mu.Lock()
 	b.botMap.waitForInput[chatID] = false
 	b.botMap.mu.Unlock()
+	msg.ReplyMarkup = b.commands
 	return msg, nil
 }
 
@@ -87,27 +103,49 @@ func (b *Bot) adminCommand(ctx context.Context, update tgbotapi.Update) (tgbotap
 	return msg, nil
 }
 
-func (b *Bot) route(ctx context.Context, update tgbotapi.Update) (tgbotapi.MessageConfig, error) {
+func (b *Bot) routeSlashCommands(ctx context.Context, update tgbotapi.Update) (tgbotapi.MessageConfig, error) {
 	chatId := update.Message.Chat.ID
 	switch update.Message.Command() {
+	case startCmd:
 
-	case "start":
 		return b.startCommand(ctx, update)
-
-	case "add_track":
+	case admin:
+		return b.adminCommand(ctx, update)
+	case addCmd:
 		return b.addCommand(ctx, update)
 
-	case "stop":
-
-	case "help":
-		msg := tgbotapi.NewMessage(chatId, helpMsg)
+	case stopCmd:
+		msg := tgbotapi.NewMessage(chatId, "Функция пока не реализована, гуляем")
 		return msg, nil
 
-	case "admin":
-		return b.adminCommand(ctx, update)
+	case helpCmd:
+		msg := tgbotapi.NewMessage(chatId, helpMsg)
+		return msg, nil
 	default:
 		msg := tgbotapi.NewMessage(chatId, unknownMsg)
 		return msg, nil
+	}
+}
+
+func (b *Bot) routeNonSlashCommands(ctx context.Context, update tgbotapi.Update) (tgbotapi.MessageConfig, error) {
+	chatId := update.Message.Chat.ID
+	switch update.Message.Text {
+
+	case add:
+		return b.addCommand(ctx, update)
+
+	case stop:
+		msg := tgbotapi.NewMessage(chatId, "Функция пока не реализована, гуляем")
+		return msg, nil
+
+	case info:
+		msg := tgbotapi.NewMessage(chatId, "Функция пока не реализована, гуляем")
+		return msg, nil
+
+	case help:
+		msg := tgbotapi.NewMessage(chatId, helpMsg)
+		return msg, nil
+
 	}
 	return nilMsg, nil
 }
