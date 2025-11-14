@@ -13,10 +13,6 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-type tracksKey string
-
-const numbers tracksKey = "numbers"
-
 const (
 	add  = "Добавить посылку"
 	stop = "Остановить рассылку"
@@ -87,7 +83,6 @@ func (b *Bot) Start() {
 func (b *Bot) Hadnle(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
 		go func() {
-			var tracks = []string{}
 
 			if update.Message == nil {
 				return
@@ -122,22 +117,19 @@ func (b *Bot) Hadnle(updates tgbotapi.UpdatesChannel) {
 					log.Print(err)
 				}
 				return
-			} else {
+			}
 
-				tracks = strings.Split(update.Message.Text, ",")
-				ctx := context.WithValue(timerCtx, numbers, tracks)
-				if b.botMap.waitForInput[update.Message.Chat.ID] {
-					msg, err := b.addCommand(ctx, update)
-					if err != nil {
-						log.Print(err)
-						return
-					}
-					_, err = b.Send(msg)
-					if err != nil {
-						log.Print(err)
-					}
+			if b.botMap.waitForInput[update.Message.Chat.ID] {
+				msg, err := b.addCommand(timerCtx, update)
+				if err != nil {
+					log.Print(err)
 					return
 				}
+				_, err = b.Send(msg)
+				if err != nil {
+					log.Print(err)
+				}
+				return
 			}
 
 		}()

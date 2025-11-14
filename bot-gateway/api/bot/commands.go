@@ -46,8 +46,8 @@ func (b *Bot) startCommand(ctx context.Context, update tgbotapi.Update) (tgbotap
 func (b *Bot) addCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.MessageConfig, error) {
 	chatID := update.Message.Chat.ID
 
-	if ctx.Value(numbers) == nil {
-		text := "Введите номера посылок через запятую (,):"
+	if update.Message.IsCommand() || update.Message.Text == add {
+		text := "Введите номера посылок через запятую\n- чтобы ничего не добавлять"
 		msg := tgbotapi.NewMessage(chatID, text)
 		b.botMap.mu.Lock()
 		defer b.botMap.mu.Unlock()
@@ -55,9 +55,21 @@ func (b *Bot) addCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.
 
 		return msg, nil
 	}
+	msgs := strings.Split(update.Message.Text, ",")
 
 	msg := tgbotapi.NewMessage(chatID, "")
-	for _, num := range ctx.Value(numbers).([]string) {
+
+	if msgs[0] == "-" {
+		msg.ReplyMarkup = b.commands
+		msg.Text = "Работаем дальше"
+		b.botMap.mu.Lock()
+		defer b.botMap.mu.Unlock()
+		b.botMap.waitForInput[chatID] = false
+
+		return msg, nil
+	}
+
+	for _, num := range msgs {
 		resp, err := b.TrackClient.AddTrack(ctx, &pb.TrackRequest{
 			Number: num,
 			User:   update.Message.From.ID,
@@ -65,8 +77,8 @@ func (b *Bot) addCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.
 
 		if err != nil {
 			log.Println(err, resp)
-			errMsg := strings.Split(err.Error(), "=")
-			msg.Text += errMsg[2]
+			errMsg := strings.Split(err.Error(), "=") //take an error info from rpc
+			msg.Text += errMsg[2]                     // error
 			continue
 		}
 
