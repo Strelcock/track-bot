@@ -73,22 +73,24 @@ func (s *server) AddTrack(ctx context.Context, in *pb.TrackRequest) (*pb.TrackRe
 
 	//subscribe to changes
 	errCh := make(chan error, 16)
+	commit := make(chan bool, 16)
 
-	go func(errCh chan error) {
+	go func(errCh chan error, commit chan bool) {
 
 		_, err := s.TrackerClient.ServeTrack(ctx, &pb.ToTracker{
 			Number: in.Number,
 		})
 		if err != nil {
 			errCh <- err
+			commit <- false
 			log.Println("hi from secong goroutine with error")
 		}
-
+		commit <- true
 		close(errCh)
-	}(errCh)
+	}(errCh, commit)
 
 	//write to db
-	err := s.TrackService.Create(tr)
+	err := s.TrackService.Create(tr, commit)
 	if err != nil {
 		return &pb.TrackResponse{
 			Status: "Что-то пошло не так в ядре",

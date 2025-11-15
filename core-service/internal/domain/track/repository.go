@@ -3,7 +3,7 @@ package track
 import "context"
 
 type TrackRepo interface {
-	Create(track *Track) error
+	Create(track *Track, commit chan bool) error
 	FindByNumber(number string) ([]Track, error)
 }
 

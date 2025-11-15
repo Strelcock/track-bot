@@ -72,10 +72,18 @@ func (db *UserDb) Admin(id int64) error {
 
 //TRACKS#########################################
 
-func (db *TrackDb) Create(track *track.Track) error {
+func (db *TrackDb) Create(track *track.Track, commit chan bool) error {
 	model := trackToModel(track)
-	_, err := db.DB.NamedQuery("INSERT INTO tracks (number, user_id) VALUES (:number, :user_id)", model)
+	tx := db.DB.MustBegin()
 
+	tx.NamedExec("INSERT INTO tracks (number, user_id) VALUES (:number, :user_id)", model)
+	flag := <-commit
+	log.Println(flag)
+	if !flag {
+		err := tx.Rollback()
+		return err
+	}
+	err := tx.Commit()
 	return err
 }
 
