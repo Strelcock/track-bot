@@ -7,19 +7,16 @@ import (
 	"core-service/internal/usecase/tservice"
 	"core-service/internal/usecase/uservice"
 	"fmt"
-	"strings"
-
-	"log"
-	"net"
-
 	"github.com/Strelcock/pb/bot/pb"
 	"google.golang.org/grpc"
+	"log"
+	"net"
+	"strings"
 )
 
 type server struct {
 	*userServer
 	*trackServer
-
 	pb.TrackerClient
 }
 
@@ -117,6 +114,17 @@ func (s *server) AddTrack(ctx context.Context, in *pb.TrackRequest) (*pb.TrackRe
 	return &pb.TrackResponse{
 		Status: fmt.Sprintf("Заказ %s добавлен успешно\n", in.Number),
 	}, nil
+}
+
+func (s *server) GetInfo(ctx context.Context, in *pb.InfoRequest) (*pb.InfoResponse, error) {
+	user := in.User
+	nums, err := s.TrackService.GetInfo(user)
+	if err != nil {
+		log.Println("server: getInfo: ", err)
+		return nil, err
+	}
+
+	return &pb.InfoResponse{Numbers: nums}, nil
 }
 
 func (s *server) Listen(port string) error {

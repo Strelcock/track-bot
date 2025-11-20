@@ -100,3 +100,17 @@ func (db *TrackDb) FindByNumber(number string) ([]track.Track, error) {
 	}
 	return res, nil
 }
+
+func (db *TrackDb) GetInfo(user int64) ([]track.Track, error) {
+	model := []trackModel{}
+	err := db.DB.Select(&model, "SELECT number FROM tracks WHERE user_id = $1", user)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []track.Track{}
+	for _, m := range model {
+		res = append(res, *m.toTrack())
+	}
+	return res, nil
+}

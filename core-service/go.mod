@@ -3,7 +3,7 @@ module core-service
 go 1.25.1
 
 require (
-	github.com/Strelcock/pb v0.0.0-20251112150807-a148da74aac2
+	github.com/Strelcock/pb v0.0.0-20251119120613-36e1390b4b6a
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9

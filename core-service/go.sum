@@ -12,6 +12,8 @@ github.com/Strelcock/pb v0.0.0-20251112140504-5e094ad463a5 h1:c+YWgcacNg8VafUGEL
 github.com/Strelcock/pb v0.0.0-20251112140504-5e094ad463a5/go.mod h1:OF1MPId3WXdoQppeh5bfYCLEKT1OaaF6KHlvaGF2U8I=
 github.com/Strelcock/pb v0.0.0-20251112150807-a148da74aac2 h1:/iE0W8cxKbzXKycSDhHfq1FjCerPb8GT1eerg3pY+bU=
 github.com/Strelcock/pb v0.0.0-20251112150807-a148da74aac2/go.mod h1:OF1MPId3WXdoQppeh5bfYCLEKT1OaaF6KHlvaGF2U8I=
+github.com/Strelcock/pb v0.0.0-20251119120613-36e1390b4b6a h1:rbzr7PadvOjQqbNtMqXFcgAU6iZjs0VqnUIxp5GkxZE=
+github.com/Strelcock/pb v0.0.0-20251119120613-36e1390b4b6a/go.mod h1:OF1MPId3WXdoQppeh5bfYCLEKT1OaaF6KHlvaGF2U8I=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/go-logr/logr v1.4.3 h1:CjnDlHq8ikf6E492q6eKboGOC0T8CDaOvkHCIg8idEI=

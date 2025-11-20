@@ -37,9 +37,9 @@ func (b *Bot) startCommand(ctx context.Context, update tgbotapi.Update) (tgbotap
 	}
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, resp.Resp)
-	log.Println("STARTUEM ", update.Message.Text)
-	msg.ReplyMarkup = b.commands
-	log.Println("ESLI NE OPEN TO HOOEVO")
+
+	msg.ReplyMarkup = commandKeyboard
+
 	return msg, nil
 }
 
@@ -49,9 +49,9 @@ func (b *Bot) addCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.
 	if update.Message.IsCommand() || update.Message.Text == add {
 		text := "Введите номера посылок через запятую\n- чтобы ничего не добавлять"
 		msg := tgbotapi.NewMessage(chatID, text)
-		b.botMap.mu.Lock()
-		defer b.botMap.mu.Unlock()
-		b.botMap.waitForInput[chatID] = true
+		b.waitMap.mu.Lock()
+		defer b.waitMap.mu.Unlock()
+		b.waitMap.waitForInput[chatID] = true
 
 		return msg, nil
 	}
@@ -60,11 +60,11 @@ func (b *Bot) addCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.
 	msg := tgbotapi.NewMessage(chatID, "")
 
 	if msgs[0] == "-" {
-		msg.ReplyMarkup = b.commands
+		msg.ReplyMarkup = commandKeyboard
 		msg.Text = "Работаем дальше"
-		b.botMap.mu.Lock()
-		defer b.botMap.mu.Unlock()
-		b.botMap.waitForInput[chatID] = false
+		b.waitMap.mu.Lock()
+		defer b.waitMap.mu.Unlock()
+		b.waitMap.waitForInput[chatID] = false
 
 		return msg, nil
 	}
@@ -86,10 +86,36 @@ func (b *Bot) addCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.
 
 	}
 
-	b.botMap.mu.Lock()
-	b.botMap.waitForInput[chatID] = false
-	b.botMap.mu.Unlock()
-	msg.ReplyMarkup = b.commands
+	b.waitMap.mu.Lock()
+	b.waitMap.waitForInput[chatID] = false
+	b.waitMap.mu.Unlock()
+	msg.ReplyMarkup = commandKeyboard
+	return msg, nil
+}
+
+func (b *Bot) InfoCommand(ctx context.Context, update tgbotapi.Update) (tgbotapi.MessageConfig, error) {
+	user := update.Message.From.ID
+	chatId := update.Message.Chat.ID
+
+	resp, err := b.TrackClient.GetInfo(ctx, &pb.InfoRequest{
+		User: user,
+	})
+	if err != nil {
+		log.Println("infoCommand: ", err.Error())
+		return nilMsg, err
+	}
+
+	if len(resp.Numbers) == 0 {
+		msg := tgbotapi.NewMessage(chatId, "Похоже вы ничего не отслеживаете :(")
+		return msg, nil
+	}
+
+	msg := tgbotapi.NewMessage(chatId, "Список номеров:")
+
+	b.infoMap.Add(user, resp.Numbers)
+
+	replyKeyboard := generateReplyKeyboard(resp.Numbers, 0)
+	msg.ReplyMarkup = replyKeyboard
 	return msg, nil
 }
 
@@ -151,8 +177,7 @@ func (b *Bot) routeNonSlashCommands(ctx context.Context, update tgbotapi.Update)
 		return msg, nil
 
 	case info:
-		msg := tgbotapi.NewMessage(chatId, "Функция пока не реализована, гуляем")
-		return msg, nil
+		return b.InfoCommand(ctx, update)
 
 	case help:
 		msg := tgbotapi.NewMessage(chatId, helpMsg)

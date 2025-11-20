@@ -21,3 +21,15 @@ func (t *TrackService) Create(track *track.Track, commit chan bool) error {
 
 	return nil
 }
+
+func (t *TrackService) GetInfo(user int64) ([]string, error) {
+	tracks, err := t.repo.GetInfo(user)
+	if err != nil {
+		return nil, err
+	}
+	res := []string{}
+	for _, num := range tracks {
+		res = append(res, num.Get().Number)
+	}
+	return res, nil
+}

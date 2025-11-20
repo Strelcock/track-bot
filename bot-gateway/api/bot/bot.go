@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 	"slices"
+	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/Strelcock/pb/bot/pb"
@@ -28,19 +28,25 @@ const (
 	helpCmd  = "help"
 )
 
-var commandList = []string{add, stop, info, help}
+var commandKeyboard = tgbotapi.NewReplyKeyboard(
+	tgbotapi.NewKeyboardButtonRow(
+		tgbotapi.NewKeyboardButton(add),
+		tgbotapi.NewKeyboardButton(stop),
+		tgbotapi.NewKeyboardButton(info),
+	),
+	tgbotapi.NewKeyboardButtonRow(
+		tgbotapi.NewKeyboardButton(help),
+	),
+)
 
-type botMap struct {
-	mu           sync.RWMutex
-	waitForInput map[int64]bool
-}
+var commandList = []string{add, stop, info, help}
 
 type Bot struct {
 	*tgbotapi.BotAPI
 	UserClient  pb.UserServiceClient
 	TrackClient pb.TrackServiceClient
-	botMap      *botMap
-	commands    tgbotapi.ReplyKeyboardMarkup
+	waitMap     *waitMap
+	infoMap     *infoMap
 }
 
 // New bot
@@ -53,20 +59,11 @@ func New(token string, userClient pb.UserServiceClient, trackClient pb.TrackServ
 	bot.Debug = true
 
 	log.Printf("Authorized account %s", bot.Self.UserName)
-	waitForInput := make(map[int64]bool)
-	commandKeyboard := tgbotapi.NewReplyKeyboard(
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton(add),
-			tgbotapi.NewKeyboardButton(stop),
-			tgbotapi.NewKeyboardButton(info),
-		),
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton(help),
-		),
-	)
-	input := &botMap{waitForInput: waitForInput}
 
-	return &Bot{bot, userClient, trackClient, input, commandKeyboard}, nil
+	waitMap := newWaitMap()
+	infoMap := NewInfoMap()
+
+	return &Bot{bot, userClient, trackClient, waitMap, infoMap}, nil
 
 }
 
@@ -83,12 +80,7 @@ func (b *Bot) Start() {
 func (b *Bot) Hadnle(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
 		go func() {
-
-			if update.Message == nil {
-				return
-			}
-
-			timerCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			timerCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			defer cancel()
 
 			//handle callbacks
@@ -100,8 +92,11 @@ func (b *Bot) Hadnle(updates tgbotapi.UpdatesChannel) {
 				return
 			}
 
-			//handle commands
+			if update.Message == nil {
+				return
+			}
 
+			//handle commands
 			if update.Message.IsCommand() {
 				err := b.HandleSlashCommands(timerCtx, update)
 				if err != nil {
@@ -119,7 +114,7 @@ func (b *Bot) Hadnle(updates tgbotapi.UpdatesChannel) {
 				return
 			}
 
-			if b.botMap.waitForInput[update.Message.Chat.ID] {
+			if b.waitMap.waitForInput[update.Message.Chat.ID] {
 				msg, err := b.addCommand(timerCtx, update)
 				if err != nil {
 					log.Print(err)
@@ -171,10 +166,22 @@ func (b *Bot) HandleCallback(update tgbotapi.Update) error {
 	if _, err := b.Request(callback); err != nil {
 		return err
 	}
+	log.Printf("\n\ncallback %s\n\n", update.CallbackQuery.Data)
 
-	msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Data)
-	if _, err := b.Send(msg); err != nil {
-		return err
+	callbackData := update.CallbackQuery.Data
+	if strings.HasPrefix(callbackData, "page:") {
+		pageStr := strings.TrimPrefix(callbackData, "page:")
+		page, err := strconv.Atoi(pageStr)
+		if err != nil {
+			log.Println("handleCallback: ", err)
+			return err
+		}
+		keyboard := generateReplyKeyboard(b.infoMap.Get(update.CallbackQuery.From.ID), page)
+		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, update.CallbackQuery.Message.Text, keyboard)
+
+		if _, err := b.Send(msg); err != nil {
+			return err
+		}
 	}
 
 	return nil
